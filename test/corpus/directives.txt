@@ -1,0 +1,113 @@
+================================================================================
+page directive exposes the language value
+================================================================================
+
+<%@ Page Language="C#" AutoEventWireup="true" Inherits="Example.Home" %>
+
+---
+
+(source_file
+  (document
+    (directive
+      (directive_name)
+      (language_attribute
+        (attribute_name)
+        (language_value))
+      (attribute
+        (attribute_name)
+        (quoted_attribute_value
+          (attribute_value)))
+      (attribute
+        (attribute_name)
+        (quoted_attribute_value
+          (attribute_value))))
+    (text)))
+
+================================================================================
+vb language
+================================================================================
+
+<%@ Control Language="VB" %>
+
+---
+
+(source_file
+  (document
+    (directive
+      (directive_name)
+      (language_attribute
+        (attribute_name)
+        (language_value)))
+    (text)))
+
+================================================================================
+application directive
+================================================================================
+
+<%@ Application Language="C#" Inherits="Example.Global" %>
+
+---
+
+(source_file
+  (document
+    (directive
+      (directive_name)
+      (language_attribute
+        (attribute_name)
+        (language_value))
+      (attribute
+        (attribute_name)
+        (quoted_attribute_value
+          (attribute_value))))
+    (text)))
+
+================================================================================
+register import assembly and output cache
+================================================================================
+
+<%@ Register Src="~/Header.ascx" TagPrefix="uc" TagName="Header" %>
+<%@ Import Namespace="System.Data" %>
+<%@ Assembly Name="Example" %>
+<%@ OutputCache Duration="60" VaryByParam="none" %>
+
+---
+
+(source_file
+  (document
+    (directive
+      (directive_name)
+      (attribute
+        (attribute_name)
+        (quoted_attribute_value
+          (attribute_value)))
+      (attribute
+        (attribute_name)
+        (quoted_attribute_value
+          (attribute_value)))
+      (attribute
+        (attribute_name)
+        (quoted_attribute_value
+          (attribute_value))))
+    (directive
+      (directive_name)
+      (attribute
+        (attribute_name)
+        (quoted_attribute_value
+          (attribute_value))))
+    (directive
+      (directive_name)
+      (attribute
+        (attribute_name)
+        (quoted_attribute_value
+          (attribute_value))))
+    (directive
+      (directive_name)
+      (attribute
+        (attribute_name)
+        (quoted_attribute_value
+          (attribute_value)))
+      (attribute
+        (attribute_name)
+        (quoted_attribute_value
+          (attribute_value))))
+    (text)))

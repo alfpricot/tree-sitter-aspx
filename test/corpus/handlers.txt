@@ -1,0 +1,74 @@
+================================================================================
+web handler remainder is code
+================================================================================
+
+<%@ WebHandler Language="C#" Class="Example.Handler" %>
+using System.Collections.Generic;
+public class Handler {
+  List<int> values;
+}
+
+---
+
+(source_file
+  (handler_file
+    (handler_directive
+      (directive_name)
+      (language_attribute
+        (attribute_name)
+        (language_value))
+      (attribute
+        (attribute_name)
+        (quoted_attribute_value
+          (attribute_value))))
+    (handler_code)))
+
+================================================================================
+web service script element
+================================================================================
+
+<%@ WebService Language="C#" Class="Example.Service" %>
+<script runat="server">
+public class Service : System.Web.Services.WebService {
+}
+</script>
+
+---
+
+(source_file
+  (handler_file
+    (handler_directive
+      (directive_name)
+      (language_attribute
+        (attribute_name)
+        (language_value))
+      (attribute
+        (attribute_name)
+        (quoted_attribute_value
+          (attribute_value))))
+    (handler_code)))
+
+================================================================================
+global application file
+================================================================================
+
+<%@ Application Codebehind="Global.asax.cs" Inherits="Example.Global" Language="C#" %>
+
+---
+
+(source_file
+  (document
+    (directive
+      (directive_name)
+      (attribute
+        (attribute_name)
+        (quoted_attribute_value
+          (attribute_value)))
+      (attribute
+        (attribute_name)
+        (quoted_attribute_value
+          (attribute_value)))
+      (language_attribute
+        (attribute_name)
+        (language_value)))
+    (text)))

@@ -1,0 +1,7 @@
+tree-sitter-aspx is an original grammar.
+
+An existing ASPX grammar was evaluated before this one was written.
+Its rules were not copied. No third-party grammar source is included
+in this repository.
+
+See LICENSE for the MIT license text.

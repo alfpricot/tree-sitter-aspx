@@ -1,0 +1,100 @@
+================================================================================
+encoded output binding and expression builder
+================================================================================
+
+<%: Title %>
+<%= Name %>
+<%# Eval("Name") %>
+<%$ AppSettings:Example %>
+
+---
+
+(source_file
+  (document
+    (encoded_expression
+      (c_sharp_code))
+    (output_expression
+      (c_sharp_code))
+    (binding_expression
+      (c_sharp_code))
+    (expression_builder
+      (expression_value))
+    (text)))
+
+================================================================================
+statement blocks stay open across markup
+================================================================================
+
+<% if (ready) { %>
+  <p>Shown</p>
+<% } %>
+
+---
+
+(source_file
+  (document
+    (statement_block
+      (c_sharp_code))
+    (element
+      (start_tag
+        (tag_name))
+      (text)
+      (end_tag
+        (tag_name)))
+    (statement_block
+      (c_sharp_code))
+    (text)))
+
+================================================================================
+server comment hides nested markup
+================================================================================
+
+<%-- <%: Hidden %> <p>no</p> --%>
+
+---
+
+(source_file
+  (document
+    (server_comment
+      (server_comment_text))
+    (text)))
+
+================================================================================
+html comment still parses a nugget
+================================================================================
+
+<!-- <%: Shown %> -->
+
+---
+
+(source_file
+  (document
+    (html_comment
+      (comment_text)
+      (encoded_expression
+        (c_sharp_code))
+      (comment_text))
+    (text)))
+
+================================================================================
+nugget inside an attribute
+================================================================================
+
+<a href="<%: NextUrl %>">Next</a>
+
+---
+
+(source_file
+  (document
+    (element
+      (start_tag
+        (tag_name)
+        (attribute
+          (attribute_name)
+          (quoted_attribute_value
+            (encoded_expression
+              (c_sharp_code)))))
+      (text)
+      (end_tag
+        (tag_name)))
+    (text)))

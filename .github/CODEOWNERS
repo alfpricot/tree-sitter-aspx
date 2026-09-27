@@ -1,0 +1,12 @@
+# This is a single-maintainer repository. Code-owner review remains disabled
+# until another maintainer can review changes independently.
+
+# Default ownership for grammar source, bindings, documentation, and release files.
+* @meloncholic
+
+# Automation and dependency policy affect the repository's verification and supply chain.
+/.github/** @meloncholic
+
+# Ownership rules themselves need maintainer review when the repository gains
+# a second maintainer and code-owner review can be enabled.
+/.github/CODEOWNERS @meloncholic

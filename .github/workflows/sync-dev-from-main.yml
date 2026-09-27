@@ -1,0 +1,46 @@
+name: Sync dev from main
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  actions: write
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: sync-dev
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Open or report the sync PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git fetch origin dev main
+          if git merge-base --is-ancestor origin/main origin/dev; then
+            echo "dev already contains main — nothing to sync."
+            exit 0
+          fi
+          branch="sync/main-into-dev"
+          git push origin "refs/remotes/origin/main:refs/heads/${branch}" --force
+          existing=$(gh pr list --base dev --head "$branch" --state open --json number --jq '.[0].number // empty')
+          if [ -n "$existing" ]; then
+            echo "Sync PR #${existing} already open — updated its branch in place."
+          else
+            gh pr create --base dev --head "$branch" \
+              --title "chore: sync dev from main" \
+              --body "Merges main back into dev after a promotion or release so dev stays a descendant of main. Merge once Verify passes; a conflict here needs manual resolution on a separate branch."
+          fi
+          gh workflow run verify.yml --ref "$branch"

@@ -1,0 +1,14 @@
+<%@ Master Language="VB" Inherits="Example.Site" %>
+<%@ Register Src="~/header.ascx" TagPrefix="uc" TagName="Switcher" %>
+<!DOCTYPE html>
+<html lang="en">
+<head runat="server">
+    <title><%: Page.Title %> - Example</title>
+</head>
+<body>
+    <form runat="server">
+        <asp:ContentPlaceHolder ID="Main" runat="server"></asp:ContentPlaceHolder>
+        <uc:Switcher runat="server" />
+    </form>
+</body>
+</html>

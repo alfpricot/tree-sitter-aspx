@@ -1,0 +1,43 @@
+name: Release tag
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  tag:
+    if: github.event.pull_request.merged == true && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'release-plz/release' && github.event.pull_request.user.login == 'github-actions[bot]'
+    permissions:
+      contents: write
+      actions: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout the merged release commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+          fetch-depth: 0
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+      - name: Tag the release and dispatch the publish workflow
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          version=$(grep -m1 '^version = ' Cargo.toml | sed -E 's/version = "(.*)"/\1/')
+          tag="v${version}"
+          if git show-ref --verify --quiet "refs/tags/${tag}"; then
+            test "$(git rev-parse "refs/tags/${tag}^{commit}")" = "$(git rev-parse HEAD)"
+            echo "Tag ${tag} already exists at this release commit — retrying publish dispatch."
+          else
+            git tag -a "${tag}" -m "${tag}"
+            git push origin "${tag}"
+          fi
+          gh workflow run release.yml --ref "$tag" -f "tag=${tag}"

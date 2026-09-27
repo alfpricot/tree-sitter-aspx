@@ -1,0 +1,60 @@
+name: Cleanup stale caches
+
+on:
+  schedule:
+    - cron: '15 6 * * *'
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: List stale caches without deleting them
+        type: boolean
+        default: false
+
+permissions:
+  actions: write
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: cache-cleanup
+  cancel-in-progress: false
+
+jobs:
+  cleanup:
+    name: Delete stale caches
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Delete caches for closed pull requests and deleted branches
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry-run }}
+        run: |
+          set -euo pipefail
+          # Complete every lookup before deleting anything. A failed API call
+          # must never be interpreted as a missing branch or a closed PR.
+          gh api --paginate "repos/$GH_REPO/actions/caches?per_page=100" \
+            --jq '.actions_caches[] | [.id, .ref, .key, .size_in_bytes] | @tsv' > caches.tsv
+          gh api --paginate "repos/$GH_REPO/branches?per_page=100" \
+            --jq '.[].name' > branches.txt
+          gh api --paginate "repos/$GH_REPO/pulls?state=open&per_page=100" \
+            --jq '.[].number' > open-prs.txt
+          while IFS=$'\t' read -r id ref key size; do
+            [ -z "$id" ] && continue
+            stale=false
+            case "$ref" in
+              refs/pull/*/merge)
+                pr_number=$(echo "$ref" | sed -E 's#refs/pull/([0-9]+)/merge#\1#')
+                grep -Fxq -- "$pr_number" open-prs.txt || stale=true
+                ;;
+              refs/heads/*)
+                branch="${ref#refs/heads/}"
+                grep -Fxq -- "$branch" branches.txt || stale=true
+                ;;
+            esac
+            if [ "$stale" = true ]; then
+              echo "Stale: $key ($ref, $size bytes)"
+              [ "$DRY_RUN" = true ] || gh cache delete "$id"
+            fi
+          done < caches.tsv

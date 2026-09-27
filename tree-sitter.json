@@ -1,0 +1,47 @@
+{
+  "grammars": [
+    {
+      "name": "aspx",
+      "camelcase": "Aspx",
+      "scope": "text.html.aspx",
+      "path": ".",
+      "file-types": [
+        "aspx",
+        "ascx",
+        "master",
+        "Master",
+        "asax",
+        "asmx",
+        "ashx"
+      ],
+      "highlights": [
+        "queries/highlights.scm"
+      ],
+      "injection-regex": "^(aspx|aspnet)$",
+      "injections": [
+        "queries/injections.scm"
+      ]
+    }
+  ],
+  "metadata": {
+    "version": "0.1.0",
+    "license": "MIT",
+    "description": "Tree-sitter grammar for ASP.NET Web Forms markup",
+    "authors": [
+      {
+        "name": "M. Reifschneider"
+      }
+    ],
+    "links": {
+      "repository": "git+https://github.com/meloncholic/tree-sitter-aspx.git"
+    }
+  },
+  "bindings": {
+    "c": true,
+    "go": false,
+    "node": true,
+    "python": false,
+    "rust": true,
+    "swift": false
+  }
+}

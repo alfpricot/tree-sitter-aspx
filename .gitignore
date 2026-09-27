@@ -1,0 +1,69 @@
+## Custom
+
+tmp/
+.tmp/
+# The tree-sitter CLI is vendored at the repo root rather than reached
+# through `npx`, but it is a ~10 MB platform-specific binary that every
+# developer downloads for their own platform — not repository content.
+/tree-sitter.exe
+/tree-sitter
+Cargo.lock
+node_modules
+.node-version
+build
+*.log
+/test.js
+/examples/npm
+/target/
+/.build/
+
+## Generated Entries
+
+# Rust artifacts
+target/
+
+# Node artifacts
+build/
+prebuilds/
+node_modules/
+
+# Swift artifacts
+.build/
+
+# Go artifacts
+_obj/
+
+# Python artifacts
+.venv/
+dist/
+*.egg-info/
+*.whl
+__pycache__/
+
+# C artifacts
+*.a
+*.so
+*.so.*
+*.dylib
+*.dll
+*.pc
+*.exp
+*.lib
+
+# Zig artifacts
+.zig-cache/
+zig-cache/
+zig-out/
+
+# Example dirs
+/examples/*/
+
+# Grammar volatiles
+*.wasm
+*.obj
+*.o
+
+# Archives
+*.tar.gz
+*.tgz
+*.zip

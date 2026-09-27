@@ -1,0 +1,67 @@
+================================================================================
+client script and style are raw text
+================================================================================
+
+<style type="text/css">
+  div > span { color: red; }
+</style>
+<script type="text/javascript">
+  if (1 < 2) { go(); }
+</script>
+
+---
+
+(source_file
+  (document
+    (style_element
+      (start_tag
+        (tag_name)
+        (attribute
+          (attribute_name)
+          (quoted_attribute_value
+            (attribute_value))))
+      (style_text)
+      (end_tag
+        (tag_name)))
+    (script_element
+      (start_tag
+        (tag_name)
+        (attribute
+          (attribute_name)
+          (quoted_attribute_value
+            (attribute_value))))
+      (c_sharp_code)
+      (end_tag
+        (tag_name)))
+    (text)))
+
+================================================================================
+server script follows the page language
+================================================================================
+
+<%@ Page Language="VB" %>
+<script runat="server">
+  Protected Sub Page_Load()
+  End Sub
+</script>
+
+---
+
+(source_file
+  (document
+    (directive
+      (directive_name)
+      (language_attribute
+        (attribute_name)
+        (language_value)))
+    (script_element
+      (start_tag
+        (tag_name)
+        (attribute
+          (attribute_name)
+          (quoted_attribute_value
+            (attribute_value))))
+      (vb_code)
+      (end_tag
+        (tag_name)))
+    (text)))

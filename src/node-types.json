@@ -1,0 +1,840 @@
+[
+  {
+    "type": "attribute",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "attribute_name",
+            "named": true
+          }
+        ]
+      },
+      "value": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "attribute_value",
+            "named": true
+          },
+          {
+            "type": "quoted_attribute_value",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "binding_expression",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": false,
+      "types": [
+        {
+          "type": "c_sharp_code",
+          "named": true
+        },
+        {
+          "type": "vb_code",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "directive",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "directive_name",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "attribute",
+          "named": true
+        },
+        {
+          "type": "language_attribute",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "directive_name",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "doctype",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "doctype_declaration",
+          "named": true
+        },
+        {
+          "type": "doctype_token",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "document",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "binding_expression",
+          "named": true
+        },
+        {
+          "type": "directive",
+          "named": true
+        },
+        {
+          "type": "doctype",
+          "named": true
+        },
+        {
+          "type": "element",
+          "named": true
+        },
+        {
+          "type": "encoded_expression",
+          "named": true
+        },
+        {
+          "type": "end_tag",
+          "named": true
+        },
+        {
+          "type": "expression_builder",
+          "named": true
+        },
+        {
+          "type": "html_comment",
+          "named": true
+        },
+        {
+          "type": "output_expression",
+          "named": true
+        },
+        {
+          "type": "script_element",
+          "named": true
+        },
+        {
+          "type": "self_closing_element",
+          "named": true
+        },
+        {
+          "type": "server_comment",
+          "named": true
+        },
+        {
+          "type": "statement_block",
+          "named": true
+        },
+        {
+          "type": "style_element",
+          "named": true
+        },
+        {
+          "type": "text",
+          "named": true
+        },
+        {
+          "type": "void_element",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "element",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "binding_expression",
+          "named": true
+        },
+        {
+          "type": "directive",
+          "named": true
+        },
+        {
+          "type": "doctype",
+          "named": true
+        },
+        {
+          "type": "element",
+          "named": true
+        },
+        {
+          "type": "encoded_expression",
+          "named": true
+        },
+        {
+          "type": "end_tag",
+          "named": true
+        },
+        {
+          "type": "expression_builder",
+          "named": true
+        },
+        {
+          "type": "html_comment",
+          "named": true
+        },
+        {
+          "type": "output_expression",
+          "named": true
+        },
+        {
+          "type": "script_element",
+          "named": true
+        },
+        {
+          "type": "self_closing_element",
+          "named": true
+        },
+        {
+          "type": "server_comment",
+          "named": true
+        },
+        {
+          "type": "start_tag",
+          "named": true
+        },
+        {
+          "type": "statement_block",
+          "named": true
+        },
+        {
+          "type": "style_element",
+          "named": true
+        },
+        {
+          "type": "text",
+          "named": true
+        },
+        {
+          "type": "void_element",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "encoded_expression",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": false,
+      "types": [
+        {
+          "type": "c_sharp_code",
+          "named": true
+        },
+        {
+          "type": "vb_code",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "end_tag",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "tag_name",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "expression_builder",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": false,
+      "types": [
+        {
+          "type": "expression_value",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "handler_directive",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "directive_name",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "attribute",
+          "named": true
+        },
+        {
+          "type": "language_attribute",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "handler_file",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "handler_code",
+          "named": true
+        },
+        {
+          "type": "handler_directive",
+          "named": true
+        },
+        {
+          "type": "script_element",
+          "named": true
+        },
+        {
+          "type": "server_comment",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "html_comment",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "binding_expression",
+          "named": true
+        },
+        {
+          "type": "comment_text",
+          "named": true
+        },
+        {
+          "type": "directive",
+          "named": true
+        },
+        {
+          "type": "encoded_expression",
+          "named": true
+        },
+        {
+          "type": "expression_builder",
+          "named": true
+        },
+        {
+          "type": "output_expression",
+          "named": true
+        },
+        {
+          "type": "server_comment",
+          "named": true
+        },
+        {
+          "type": "statement_block",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "language_attribute",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "attribute_name",
+            "named": true
+          }
+        ]
+      },
+      "value": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "language_value",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "output_expression",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": false,
+      "types": [
+        {
+          "type": "c_sharp_code",
+          "named": true
+        },
+        {
+          "type": "vb_code",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "quoted_attribute_value",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "attribute_value",
+          "named": true
+        },
+        {
+          "type": "binding_expression",
+          "named": true
+        },
+        {
+          "type": "encoded_expression",
+          "named": true
+        },
+        {
+          "type": "expression_builder",
+          "named": true
+        },
+        {
+          "type": "output_expression",
+          "named": true
+        },
+        {
+          "type": "server_comment",
+          "named": true
+        },
+        {
+          "type": "statement_block",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "script_element",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "c_sharp_code",
+          "named": true
+        },
+        {
+          "type": "end_tag",
+          "named": true
+        },
+        {
+          "type": "start_tag",
+          "named": true
+        },
+        {
+          "type": "vb_code",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "self_closing_element",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "tag_name",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "attribute",
+          "named": true
+        },
+        {
+          "type": "language_attribute",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "server_comment",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": false,
+      "types": [
+        {
+          "type": "server_comment_text",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "source_file",
+    "named": true,
+    "root": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": false,
+      "types": [
+        {
+          "type": "document",
+          "named": true
+        },
+        {
+          "type": "handler_file",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "start_tag",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "tag_name",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "attribute",
+          "named": true
+        },
+        {
+          "type": "language_attribute",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "statement_block",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": false,
+      "types": [
+        {
+          "type": "c_sharp_code",
+          "named": true
+        },
+        {
+          "type": "vb_code",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "style_element",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "end_tag",
+          "named": true
+        },
+        {
+          "type": "start_tag",
+          "named": true
+        },
+        {
+          "type": "style_text",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "tag_name",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "void_element",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "tag_name",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "attribute",
+          "named": true
+        },
+        {
+          "type": "language_attribute",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "\"",
+    "named": false
+  },
+  {
+    "type": "%>",
+    "named": false
+  },
+  {
+    "type": "'",
+    "named": false
+  },
+  {
+    "type": "--%>",
+    "named": false
+  },
+  {
+    "type": "-->",
+    "named": false
+  },
+  {
+    "type": "/>",
+    "named": false
+  },
+  {
+    "type": "<",
+    "named": false
+  },
+  {
+    "type": "<!--",
+    "named": false
+  },
+  {
+    "type": "<%",
+    "named": false
+  },
+  {
+    "type": "<%#",
+    "named": false
+  },
+  {
+    "type": "<%$",
+    "named": false
+  },
+  {
+    "type": "<%--",
+    "named": false
+  },
+  {
+    "type": "<%:",
+    "named": false
+  },
+  {
+    "type": "<%=",
+    "named": false
+  },
+  {
+    "type": "<%@",
+    "named": false
+  },
+  {
+    "type": "</",
+    "named": false
+  },
+  {
+    "type": "=",
+    "named": false
+  },
+  {
+    "type": ">",
+    "named": false
+  },
+  {
+    "type": "WEBHANDLER",
+    "named": false
+  },
+  {
+    "type": "WEBSERVICE",
+    "named": false
+  },
+  {
+    "type": "WebHandler",
+    "named": false
+  },
+  {
+    "type": "WebService",
+    "named": false
+  },
+  {
+    "type": "attribute_name",
+    "named": true
+  },
+  {
+    "type": "attribute_value",
+    "named": true
+  },
+  {
+    "type": "c_sharp_code",
+    "named": true
+  },
+  {
+    "type": "comment_text",
+    "named": true
+  },
+  {
+    "type": "doctype_declaration",
+    "named": true
+  },
+  {
+    "type": "doctype_token",
+    "named": true
+  },
+  {
+    "type": "expression_value",
+    "named": true
+  },
+  {
+    "type": "handler_code",
+    "named": true
+  },
+  {
+    "type": "language_value",
+    "named": true
+  },
+  {
+    "type": "server_comment_text",
+    "named": true
+  },
+  {
+    "type": "style_text",
+    "named": true
+  },
+  {
+    "type": "text",
+    "named": true
+  },
+  {
+    "type": "vb_code",
+    "named": true
+  },
+  {
+    "type": "webhandler",
+    "named": false
+  },
+  {
+    "type": "webservice",
+    "named": false
+  }
+]

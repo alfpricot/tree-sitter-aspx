@@ -1,0 +1,89 @@
+================================================================================
+server control with a template and a void tag
+================================================================================
+
+<!DOCTYPE html>
+<asp:GridView ID="Grid" runat="server">
+  <Columns>
+    <asp:BoundField DataField="Name" />
+  </Columns>
+</asp:GridView>
+<br>
+<img alt="" src="logo.png" />
+<meta charset="utf-8">
+
+---
+
+(source_file
+  (document
+    (doctype
+      (doctype_token)
+      (doctype_declaration))
+    (element
+      (start_tag
+        (tag_name)
+        (attribute
+          (attribute_name)
+          (quoted_attribute_value
+            (attribute_value)))
+        (attribute
+          (attribute_name)
+          (quoted_attribute_value
+            (attribute_value))))
+      (element
+        (start_tag
+          (tag_name))
+        (self_closing_element
+          (tag_name)
+          (attribute
+            (attribute_name)
+            (quoted_attribute_value
+              (attribute_value))))
+        (end_tag
+          (tag_name)))
+      (end_tag
+        (tag_name)))
+    (void_element
+      (tag_name))
+    (void_element
+      (tag_name)
+      (attribute
+        (attribute_name)
+        (quoted_attribute_value))
+      (attribute
+        (attribute_name)
+        (quoted_attribute_value
+          (attribute_value))))
+    (void_element
+      (tag_name)
+      (attribute
+        (attribute_name)
+        (quoted_attribute_value
+          (attribute_value))))
+    (text)))
+
+================================================================================
+text inside a server control
+================================================================================
+
+<asp:Label ID="Caption" runat="server">Hello</asp:Label>
+
+---
+
+(source_file
+  (document
+    (element
+      (start_tag
+        (tag_name)
+        (attribute
+          (attribute_name)
+          (quoted_attribute_value
+            (attribute_value)))
+        (attribute
+          (attribute_name)
+          (quoted_attribute_value
+            (attribute_value))))
+      (text)
+      (end_tag
+        (tag_name)))
+    (text)))

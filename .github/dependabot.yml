@@ -1,0 +1,75 @@
+version: 2
+
+updates:
+  - package-ecosystem: cargo
+    directory: /
+    target-branch: dev
+    versioning-strategy: auto
+    schedule:
+      interval: weekly
+      day: monday
+      time: "08:30"
+      timezone: America/New_York
+    open-pull-requests-limit: 2
+    rebase-strategy: auto
+    commit-message:
+      prefix: chore
+      include: scope
+    labels: [dependabot, rust]
+    groups:
+      cargo-minor-and-patch:
+        patterns: ['*']
+        update-types: [minor, patch]
+      cargo-major:
+        patterns: ['*']
+        update-types: [major]
+
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: dev
+    schedule:
+      interval: weekly
+      day: monday
+      time: "08:45"
+      timezone: America/New_York
+    open-pull-requests-limit: 2
+    rebase-strategy: auto
+    commit-message:
+      prefix: ci
+      include: scope
+    labels: [dependabot, ci]
+    groups:
+      github-actions:
+        patterns: ['*']
+        update-types: [minor, patch]
+      github-actions-major:
+        patterns: ['*']
+        update-types: [major]
+
+  - package-ecosystem: npm
+    directory: /
+    target-branch: dev
+    versioning-strategy: increase-if-necessary
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: America/New_York
+    open-pull-requests-limit: 2
+    rebase-strategy: auto
+    cooldown:
+      default-days: 4
+      semver-major-days: 7
+      semver-minor-days: 4
+      semver-patch-days: 2
+    commit-message:
+      prefix: chore
+      include: scope
+    labels: [dependabot, javascript]
+    groups:
+      npm-minor-and-patch:
+        patterns: ['*']
+        update-types: [minor, patch]
+      npm-major:
+        patterns: ['*']
+        update-types: [major]

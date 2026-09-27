@@ -1,0 +1,8 @@
+[workspace]
+git_only = true
+publish = false
+semver_check = true
+
+[[package]]
+name = "tree-sitter-aspx"
+git_tag_name = "v{{ version }}"
