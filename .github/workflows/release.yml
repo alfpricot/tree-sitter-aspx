@@ -90,7 +90,7 @@ jobs:
         run: |
           set -euo pipefail
           version="${TAG#v}"
-          status=$(curl -s -o /dev/null -w '%{http_code}' -A "tree-sitter-aspx-release (meloncholic/tree-sitter-aspx)" "https://crates.io/api/v1/crates/tree-sitter-aspx/${version}")
+          status=$(curl -s -o /dev/null -w '%{http_code}' -A "tree-sitter-aspx-release (meloncholera/tree-sitter-aspx)" "https://crates.io/api/v1/crates/tree-sitter-aspx/${version}")
           if [ "$status" = "200" ]; then
             echo "tree-sitter-aspx@${version} is already published, skipping"
           elif [ "$status" = "404" ]; then
@@ -176,11 +176,11 @@ jobs:
         with:
           node-version: '24.x'
           registry-url: https://npm.pkg.github.com
-          scope: '@meloncholic'
+          scope: '@meloncholera'
       - name: Set package name and version for GitHub Packages
         run: |
           set -euo pipefail
-          npm pkg set "name=@meloncholic/tree-sitter-aspx"
+          npm pkg set "name=@meloncholera/tree-sitter-aspx"
           node .release-tools/tools/release-policy.mjs prepare-npm
       - name: Publish (skip if this version is already live)
         env:
@@ -188,8 +188,8 @@ jobs:
         run: |
           set -euo pipefail
           version="${TAG#v}"
-          if npm view "@meloncholic/tree-sitter-aspx@${version}" version >/dev/null 2>&1; then
-            echo "@meloncholic/tree-sitter-aspx@${version} is already published, skipping"
+          if npm view "@meloncholera/tree-sitter-aspx@${version}" version >/dev/null 2>&1; then
+            echo "@meloncholera/tree-sitter-aspx@${version} is already published, skipping"
           else
             npm publish --access public
           fi
