@@ -62,5 +62,3 @@ cargo build
 ```
 
 Release jobs require a version tag on `main` matching the Cargo package version and publish from the commit that passed verification. The npm and GitHub Packages archives carry that same version in both `package.json` and `tree-sitter.json`.
-
-Publishing waits on the registry credentials configured for this repository. Until the first tag is published, depend on a git revision of `dev`.
