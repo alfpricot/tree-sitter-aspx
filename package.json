@@ -36,12 +36,12 @@
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/meloncholic/tree-sitter-aspx.git"
+    "url": "git+https://github.com/meloncholera/tree-sitter-aspx.git"
   },
   "bugs": {
-    "url": "https://github.com/meloncholic/tree-sitter-aspx/issues"
+    "url": "https://github.com/meloncholera/tree-sitter-aspx/issues"
   },
-  "homepage": "https://github.com/meloncholic/tree-sitter-aspx#readme",
+  "homepage": "https://github.com/meloncholera/tree-sitter-aspx#readme",
   "keywords": [
     "parser",
     "aspx",

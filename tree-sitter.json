@@ -33,7 +33,7 @@
       }
     ],
     "links": {
-      "repository": "git+https://github.com/meloncholic/tree-sitter-aspx.git"
+      "repository": "git+https://github.com/meloncholera/tree-sitter-aspx.git"
     }
   },
   "bindings": {
