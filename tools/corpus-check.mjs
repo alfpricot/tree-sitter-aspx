@@ -64,7 +64,9 @@ try {
     const tempPath = join(temp, `${index}${extname(path).toLowerCase()}`);
     writeFileSync(tempPath, decoded);
     const proc = spawnSync(cli, ['parse', tempPath], {
-      cwd: repo, encoding: 'utf8', maxBuffer: 1 << 26,
+      cwd: repo,
+      encoding: 'utf8',
+      maxBuffer: 1 << 26,
       env: { ...process.env, CC: 'gcc', CXX: 'g++' },
     });
     try {
@@ -82,7 +84,9 @@ try {
   rmSync(temp, { recursive: true, force: true });
 }
 
-console.log(bad
-  ? `${bad}/${files.length} files with problems`
-  : `all ${files.length} files parse clean (no ERROR/MISSING, no zero-width nodes)`);
+console.log(
+  bad
+    ? `${bad}/${files.length} files with problems`
+    : `all ${files.length} files parse clean (no ERROR/MISSING, no zero-width nodes)`,
+);
 process.exit(bad ? 1 : 0);

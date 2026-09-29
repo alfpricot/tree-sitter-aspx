@@ -4,7 +4,10 @@ import { appendFileSync, readFileSync, writeFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 
 export function releaseVersion(tag, manifest) {
-  assert(/^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.test(tag), 'Expected a stable release tag such as v0.1.1');
+  assert(
+    /^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.test(tag),
+    'Expected a stable release tag such as v0.1.1',
+  );
   const section = manifest.split(/^\[package\]\s*$/m)[1]?.split(/^\[/m)[0];
   const version = section?.match(/^version\s*=\s*"([^"]+)"\s*$/m)?.[1];
   assert.equal(version, tag.slice(1), 'Release tag must match the root Cargo package version');
@@ -42,6 +45,11 @@ if (process.argv[2] === 'resolve') {
   appendFileSync(process.env.GITHUB_OUTPUT, `commit=${commit}\npolicy=${policy}\n`);
 } else if (process.argv[2] === 'prepare-npm') {
   prepareNpm(process.env.TAG);
-  const provenance = canAttest(process.env.TAG, process.env.RELEASE_COMMIT, process.env.GITHUB_REF, process.env.GITHUB_SHA);
+  const provenance = canAttest(
+    process.env.TAG,
+    process.env.RELEASE_COMMIT,
+    process.env.GITHUB_REF,
+    process.env.GITHUB_SHA,
+  );
   appendFileSync(process.env.GITHUB_OUTPUT, `provenance=${provenance}\n`);
 }

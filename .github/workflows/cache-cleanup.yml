@@ -1,3 +1,16 @@
+# =============================================================================
+#  tree-sitter-aspx · GitHub Actions
+# -----------------------------------------------------------------------------
+#  File                cache-cleanup.yml
+#  Workflow name       Cleanup stale caches
+#  Type                Entrypoint (runs in this repo only)
+#  Triggers            schedule (daily)
+#                      workflow_dispatch
+#  Purpose             Deletes Actions caches belonging to closed pull
+#                      requests and deleted branches, so they stop counting
+#                      against the repository's cache quota.
+# =============================================================================
+
 name: Cleanup stale caches
 
 on:

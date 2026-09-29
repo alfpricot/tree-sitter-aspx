@@ -1,10 +1,11 @@
 import assert from 'node:assert/strict';
 import { statSync } from 'node:fs';
 import { join } from 'node:path';
+import { stripVTControlCharacters } from 'node:util';
 
 // Strips ANSI color codes from `tree-sitter parse`'s terminal output.
 export function stripAnsi(text) {
-  return text.replace(/\u001b\[[0-9;]*m/g, '');
+  return stripVTControlCharacters(text);
 }
 
 // Finds the locally installed tree-sitter CLI binary, checked under each

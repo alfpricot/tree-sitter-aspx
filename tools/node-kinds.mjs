@@ -20,7 +20,8 @@ const kinds = types
 
 if (process.argv.includes('--check')) {
   const committed = readFileSync(join(repo, 'test/node-kinds.txt'), 'utf8')
-    .split(/\r?\n/).filter((l) => l && !l.startsWith('#'));
+    .split(/\r?\n/)
+    .filter((l) => l && !l.startsWith('#'));
   const added = kinds.filter((k) => !committed.includes(k));
   const removed = committed.filter((k) => !kinds.includes(k));
   if (added.length || removed.length) {
