@@ -1,7 +1,7 @@
 [package]
 name = "tree-sitter-aspx"
 description = "Tree-sitter grammar for ASP.NET Web Forms markup"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["M. Reifschneider"]
 license = "MIT"
 readme = "README.md"
