@@ -14,7 +14,6 @@
 //     the recorded language stays unchanged.
 #include "tree_sitter/parser.h"
 
-#include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
 #include <wctype.h>
@@ -42,12 +41,20 @@ typedef struct {
   uint8_t language;
 } Scanner;
 
+// ASCII-only lowercase. The Wasm parser target provides no libc ctype
+// functions, and language names here are ASCII by construction.
+static char ascii_lower(char c) {
+  return (c >= 'A' && c <= 'Z') ? (char)(c + ('a' - 'A')) : c;
+}
+
 static bool is_space(int32_t c) {
   return c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\f' || c == '\v';
 }
 
 void *tree_sitter_aspx_external_scanner_create(void) {
-  Scanner *scanner = calloc(1, sizeof(Scanner));
+  // malloc plus an explicit field set, not calloc: the compiler can lower
+  // calloc to memset, which the Wasm parser target does not provide.
+  Scanner *scanner = malloc(sizeof(Scanner));
   scanner->language = LANGUAGE_CSHARP;
   return scanner;
 }
@@ -163,7 +170,7 @@ static bool scan_language(TSLexer *lexer, Scanner *scanner, const bool *valid_sy
     if (c == 0 || c == '"' || c == '\'' || is_space(c) || c > 127) {
       break;
     }
-    buf[n++] = (char)tolower((unsigned char)c);
+    buf[n++] = ascii_lower((char)c);
     lexer->advance(lexer, false);
   }
   buf[n] = '\0';
