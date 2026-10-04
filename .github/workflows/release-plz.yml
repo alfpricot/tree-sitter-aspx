@@ -62,6 +62,11 @@ jobs:
         uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
       - name: Install cargo-binstall
         uses: cargo-bins/cargo-binstall@b874e25ea559687bec77e281e9b271aa1367b624 # v1.23.0
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '24.x'
+
       - name: Install release-plz
         run: cargo binstall release-plz@0.3.160 --force --strategies=crate-meta-data --no-confirm
       - name: Compute next version and changelog
@@ -79,6 +84,11 @@ jobs:
           fi
           version=$(grep -m1 '^version = ' Cargo.toml | sed -E 's/version = "(.*)"/\1/')
           TAG="v${version}" node tools/release-policy.mjs prepare-npm
+          # The generated parser embeds the package version, so regenerate it
+          # after the bump or Verify fails the generated-parser check.
+          npm ci --ignore-scripts
+          npm rebuild tree-sitter-cli
+          npx --no-install tree-sitter generate
           branch="release-plz/release"
           git add -A
           git commit -m "chore(release): v${version}"

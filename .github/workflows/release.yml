@@ -22,7 +22,10 @@
 #                      install on those platforms needs no C toolchain;
 #                      node-gyp-build prefers a matching prebuild over a
 #                      source build. A WASM build is attached to the GitHub
-#                      Release for web-tree-sitter consumers.
+#                      Release for web-tree-sitter consumers, along with
+#                      test/node-kinds.txt and versions.json as the node-kind
+#                      stability surface (only the files the checkout has —
+#                      an older tag re-dispatched by hand can predate them).
 #
 #                      The workflow_dispatch trigger exists because
 #                      release-tag.yml pushes the tag using GITHUB_TOKEN, and
@@ -378,3 +381,19 @@ jobs:
         run: |
           set -euo pipefail
           gh release upload "$TAG" "$WASM_FILE" --clobber
+
+      - name: Attach the node-kind stability surface
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          # A manual re-dispatch can target a tag cut before these files
+          # existed; upload only what the checkout has, so a recovery run
+          # against an old tag does not fail the whole job.
+          assets=()
+          for f in test/node-kinds.txt versions.json; do
+            [ -f "$f" ] && assets+=("$f")
+          done
+          if [ "${#assets[@]}" -gt 0 ]; then
+            gh release upload "$TAG" "${assets[@]}" --clobber
+          fi
