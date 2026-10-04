@@ -1,3 +1,31 @@
+# =============================================================================
+#  tree-sitter-aspx · GitHub Actions
+# -----------------------------------------------------------------------------
+#  File                release-plz.yml
+#  Workflow name       Release-plz
+#  Type                Entrypoint (runs in this repo only)
+#  Triggers            push (main branch)
+#                      workflow_dispatch
+#  Purpose             Computes the next version + CHANGELOG.md from
+#                      Conventional Commits (release-plz update) and opens or
+#                      updates a "chore(release): vX.Y.Z" pull request against
+#                      main carrying that bump. Tagging (which triggers
+#                      release.yml's crates.io + npm publish sequence) happens
+#                      separately, in release-tag.yml, once that PR is merged.
+#
+#                      This repo's rulesets require every change on main/dev/
+#                      test to land through a pull request, and its required
+#                      status check rule cannot be bypassed by any actor
+#                      (including repo admins) — so a workflow can never push
+#                      directly to a protected branch, only to an ordinary
+#                      branch it then opens a PR from. Merging that PR is a
+#                      manual step: this repo's owner is exempt from its
+#                      review requirement, so no separate approval is needed,
+#                      just running `gh pr merge`. Because a GITHUB_TOKEN
+#                      push never triggers a pull_request run, this workflow
+#                      dispatches verify.yml on the release branch itself.
+# =============================================================================
+
 name: Release-plz
 
 on:

@@ -9,7 +9,8 @@
 #                      workflow_dispatch
 #  Purpose             Regenerate the parser from grammar.js, fail on any
 #                      drift in the generated parser or the committed
-#                      node-kind snapshot, run the tree-sitter corpus and
+#                      node-kind snapshot, lint and format-check the
+#                      JavaScript sources, run the tree-sitter corpus and
 #                      highlight tests, parse every fixture and fail on any
 #                      ERROR/MISSING/zero-width node, assert the fixtures
 #                      carry no connection-string shapes, build and test
@@ -90,12 +91,17 @@ jobs:
         id: scan
         run: $HOME/.local/bin/gitleaks detect --no-git --redact --source . --exit-code 1 --report-format json --report-path gitleaks-report.json
 
+      - name: Scan Git history with Gitleaks
+        id: history-scan
+        run: $HOME/.local/bin/gitleaks detect --redact --source . --exit-code 1 --report-format json --report-path gitleaks-history-report.json
+
       - name: Upload redacted secret scan report
-        if: failure() && steps.scan.outcome == 'failure'
+        if: failure() && (steps.scan.outcome == 'failure' || steps.history-scan.outcome == 'failure')
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: gitleaks-report
-          path: gitleaks-report.json
+          path: gitleaks-*report.json
+          if-no-files-found: ignore
           retention-days: 3
 
       - name: Cache actionlint
@@ -249,6 +255,12 @@ jobs:
           git ls-files --error-unmatch test/node-kinds.txt
           node tools/node-kinds.mjs > test/node-kinds.txt
           git diff --exit-code -- test/node-kinds.txt
+
+      - name: Lint the JavaScript sources
+        run: npm run lint
+
+      - name: Check formatting of the JavaScript sources
+        run: npm run format:check
 
       - name: Run corpus and highlight tests
         run: npx --no-install tree-sitter test

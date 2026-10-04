@@ -13,15 +13,7 @@ rust-version = "1.85"
 autoexamples = false
 
 build = "bindings/rust/build.rs"
-include = [
-  "/LICENSE",
-  "/NOTICE",
-  "/README.md",
-  "/grammar.js",
-  "/bindings/rust/**",
-  "/queries/**",
-  "/src/**",
-]
+include = ["/LICENSE", "/NOTICE", "/README.md", "/tree-sitter.json", "/bindings/rust/*", "/grammar.js", "/queries/*", "/src/**"]
 
 [lib]
 path = "bindings/rust/lib.rs"
@@ -30,7 +22,7 @@ path = "bindings/rust/lib.rs"
 tree-sitter-language = "0.1"
 
 [build-dependencies]
-cc = "~1.4.4"
+cc = "~1.5.1"
 
 [dev-dependencies]
 # Tracks the newest tree-sitter release. This is a dev-dependency only —
@@ -46,4 +38,4 @@ cc = "~1.4.4"
 # test suite needs 1.90. Keeping the declared floor at the real library
 # floor is what lets a consumer on an older toolchain still depend on this
 # crate; raising it to 1.90 would exclude them for a dev-only reason.
-tree-sitter = "0.27"
+tree-sitter = "~0.27.0"

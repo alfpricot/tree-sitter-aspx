@@ -1,3 +1,21 @@
+# =============================================================================
+#  tree-sitter-aspx · GitHub Actions
+# -----------------------------------------------------------------------------
+#  File                release-tag.yml
+#  Workflow name       Release tag
+#  Type                Entrypoint (runs in this repo only)
+#  Triggers            pull_request (closed, base main)
+#  Purpose             Tags the version once release-plz.yml's release PR
+#                      (head branch release-plz/release) is merged into main.
+#                      A tag ref isn't covered by this repo's branch
+#                      rulesets, so pushing it needs no PR — but GitHub never
+#                      fires further workflow runs off a GITHUB_TOKEN-
+#                      authored push, so the tag push alone would never reach
+#                      release.yml's crates.io + npm publish sequence. This
+#                      workflow explicitly dispatches release.yml with the
+#                      tag it just pushed instead of relying on that event.
+# =============================================================================
+
 name: Release tag
 
 on:

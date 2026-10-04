@@ -1,3 +1,17 @@
+# =============================================================================
+#  tree-sitter-aspx · GitHub Actions
+# -----------------------------------------------------------------------------
+#  File                sync-dev-from-main.yml
+#  Workflow name       Sync dev from main
+#  Type                Entrypoint (runs in this repo only)
+#  Triggers            push (main branch)
+#  Purpose             Opens (or updates) a PR merging main back into dev
+#                      after a promotion or release, so dev stays a
+#                      descendant of main. The branch is pushed with
+#                      GITHUB_TOKEN, which never triggers a pull_request
+#                      run, so this workflow dispatches verify.yml on it.
+# =============================================================================
+
 name: Sync dev from main
 
 on:

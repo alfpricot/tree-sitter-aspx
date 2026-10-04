@@ -36,6 +36,21 @@ larger synthetic pages checked for `ERROR`, `MISSING`, and zero-width nodes.
 and applies the same check to a local Web Forms tree. Do not commit pages
 copied from a private application; fixtures stay synthetic.
 
+## Lint and format
+
+`eslint` and `prettier` are devDependencies, since ESLint's flat config (`eslint.config.js`) imports
+`@eslint/js` and resolves it from this checkout's own `node_modules`. `npm ci --ignore-scripts`
+installs them without running the package's own `node-gyp-build` lifecycle script, which needs a C
+toolchain that is not relevant to linting. Then:
+
+```sh
+npm run lint
+npm run format:check
+```
+
+`npm run format` applies formatting. Both cover `grammar.js`, `tools/*.mjs` and `bindings/node/*.js`;
+the generated parser under `src/` is excluded.
+
 ## Pull requests
 
 - Regenerate and commit the parser and node-kind snapshot with any grammar
@@ -43,4 +58,5 @@ copied from a private application; fixtures stay synthetic.
 - Add a corpus case or extend a fixture for every newly supported construct.
 - Keep node-kind renames for a breaking release: consumers match these names
   at runtime.
-- Keep the full Rust verification suite warning-free.
+- Keep the full Rust verification suite warning-free, and pass `npm run lint` and
+  `npm run format:check`.

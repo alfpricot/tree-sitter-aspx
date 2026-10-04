@@ -13,8 +13,22 @@ const needles = [
   ['pwd'],
 ].map((words) => new RegExp(words.join('\\s+') + '\\s*=', 'i'));
 
-const binary = new Set(['.png', '.jpg', '.jpeg', '.gif', '.webp', '.ico', '.wasm', '.node', '.exe', '.dll', '.pdb']);
-const tracked = execFileSync('git', ['ls-files', '-z'], { encoding: 'utf8' }).split('\0').filter(Boolean);
+const binary = new Set([
+  '.png',
+  '.jpg',
+  '.jpeg',
+  '.gif',
+  '.webp',
+  '.ico',
+  '.wasm',
+  '.node',
+  '.exe',
+  '.dll',
+  '.pdb',
+]);
+const tracked = execFileSync('git', ['ls-files', '-z'], { encoding: 'utf8' })
+  .split('\0')
+  .filter(Boolean);
 let hits = 0;
 for (const path of tracked) {
   const full = path.replaceAll('\\', '/');

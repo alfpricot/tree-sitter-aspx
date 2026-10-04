@@ -6,20 +6,26 @@
   "types": "bindings/node",
   "scripts": {
     "install": "node-gyp-build",
-    "prestart": "tree-sitter build --wasm",
-    "start": "tree-sitter playground",
-    "test": "node --test bindings/node/*_test.js"
+    "prestart": "npx --yes --package=tree-sitter-cli@0.27.0 -- tree-sitter build --wasm",
+    "start": "npx --yes --package=tree-sitter-cli@0.27.0 -- tree-sitter playground",
+    "test": "node --test bindings/node/*_test.js",
+    "lint": "eslint \"grammar.js\" \"tools/*.mjs\" \"bindings/node/*.js\"",
+    "format": "prettier --write \"grammar.js\" \"tools/*.mjs\" \"bindings/node/*.js\"",
+    "format:check": "prettier --check \"grammar.js\" \"tools/*.mjs\" \"bindings/node/*.js\""
   },
   "author": "M. Reifschneider",
   "license": "MIT",
   "dependencies": {
-    "node-addon-api": "^8.9.2",
-    "node-gyp-build": "^4.8.0"
+    "node-addon-api": "8.9.2",
+    "node-gyp-build": "4.8.4"
   },
   "devDependencies": {
-    "tree-sitter-cli": "0.27.0",
-    "node-gyp": "^13.0.2",
-    "tree-sitter": "^0.25.0"
+    "@eslint/js": "10.0.1",
+    "eslint": "10.12.0",
+    "node-gyp": "13.1.0",
+    "prettier": "3.9.9",
+    "tree-sitter": "0.25.1",
+    "tree-sitter-cli": "0.27.0"
   },
   "peerDependencies": {
     "tree-sitter": "^0.25.0"
@@ -54,11 +60,18 @@
     "bindings/node/*",
     "queries/*",
     "src/**",
+    "prebuilds/**",
     "tree-sitter.json",
     "NOTICE"
   ],
   "allowScripts": {
     "tree-sitter-cli@0.27.0": true,
     "tree-sitter@0.25.1": true
+  },
+  "prettier": {
+    "tabWidth": 2,
+    "singleQuote": true,
+    "trailingComma": "all",
+    "printWidth": 100
   }
 }
