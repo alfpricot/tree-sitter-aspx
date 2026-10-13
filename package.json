@@ -23,9 +23,9 @@
     "@eslint/js": "10.0.1",
     "eslint": "10.12.0",
     "node-gyp": "13.1.0",
-    "prettier": "3.9.9",
+    "prettier": "3.9.10",
     "tree-sitter": "0.25.1",
-    "tree-sitter-cli": "0.27.0"
+    "tree-sitter-cli": "0.27.1"
   },
   "peerDependencies": {
     "tree-sitter": "^0.25.0"
