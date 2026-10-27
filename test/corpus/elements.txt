@@ -59,8 +59,7 @@ server control with a template and a void tag
       (attribute
         (attribute_name)
         (quoted_attribute_value
-          (attribute_value))))
-    (text)))
+          (attribute_value))))))
 
 ================================================================================
 text inside a server control
@@ -85,5 +84,4 @@ text inside a server control
             (attribute_value))))
       (text)
       (end_tag
-        (tag_name)))
-    (text)))
+        (tag_name)))))

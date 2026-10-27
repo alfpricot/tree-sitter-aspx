@@ -18,8 +18,7 @@ encoded output binding and expression builder
     (binding_expression
       (c_sharp_code))
     (expression_builder
-      (expression_value))
-    (text)))
+      (expression_value))))
 
 ================================================================================
 statement blocks stay open across markup
@@ -42,8 +41,7 @@ statement blocks stay open across markup
       (end_tag
         (tag_name)))
     (statement_block
-      (c_sharp_code))
-    (text)))
+      (c_sharp_code))))
 
 ================================================================================
 server comment hides nested markup
@@ -56,8 +54,7 @@ server comment hides nested markup
 (source_file
   (document
     (server_comment
-      (server_comment_text))
-    (text)))
+      (server_comment_text))))
 
 ================================================================================
 html comment still parses a nugget
@@ -73,8 +70,7 @@ html comment still parses a nugget
       (comment_text)
       (encoded_expression
         (c_sharp_code))
-      (comment_text))
-    (text)))
+      (comment_text))))
 
 ================================================================================
 nugget inside an attribute
@@ -96,5 +92,4 @@ nugget inside an attribute
               (c_sharp_code)))))
       (text)
       (end_tag
-        (tag_name)))
-    (text)))
+        (tag_name)))))

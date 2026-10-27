@@ -1286,9 +1286,9 @@ static bool ts_lex(TSLexer *lexer, TSStateId state) {
     case 24:
       if (eof) ADVANCE(25);
       if (lookahead == '<') ADVANCE(51);
+      if (lookahead == 0xfeff) ADVANCE(78);
       if (('\t' <= lookahead && lookahead <= '\r') ||
-          lookahead == ' ' ||
-          lookahead == 0xfeff) ADVANCE(78);
+          lookahead == ' ') SKIP(24);
       if (lookahead != 0) ADVANCE(79);
       END_STATE();
     case 25:
@@ -1650,9 +1650,9 @@ static bool ts_lex(TSLexer *lexer, TSStateId state) {
     case 78:
       ACCEPT_TOKEN(sym_text);
       if (lookahead == '<') ADVANCE(51);
+      if (lookahead == 0xfeff) ADVANCE(78);
       if (('\t' <= lookahead && lookahead <= '\r') ||
-          lookahead == ' ' ||
-          lookahead == 0xfeff) ADVANCE(78);
+          lookahead == ' ') ADVANCE(78);
       if (lookahead != 0) ADVANCE(79);
       END_STATE();
     case 79:

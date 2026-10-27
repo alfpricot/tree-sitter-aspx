@@ -70,5 +70,4 @@ global application file
           (attribute_value)))
       (language_attribute
         (attribute_name)
-        (language_value)))
-    (text)))
+        (language_value)))))
