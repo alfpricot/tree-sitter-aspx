@@ -1417,7 +1417,7 @@
     },
     "text": {
       "type": "PATTERN",
-      "value": "[^<]+"
+      "value": "[^<\\s][^<]*"
     }
   },
   "extras": [

@@ -78,4 +78,20 @@ mod tests {
         let tree = parser.parse(r#"<%@ Page Language="C#" %>"#, None).unwrap();
         assert!(!tree.root_node().has_error());
     }
+
+    /// Whitespace between nodes is not part of the node that follows it, so a
+    /// comment starts at its own `<%--` rather than at the previous line's end.
+    #[test]
+    fn test_node_starts_after_leading_whitespace() {
+        let mut parser = tree_sitter::Parser::new();
+        parser.set_language(&LANGUAGE.into()).unwrap();
+        let tree = parser
+            .parse("<%@ Page %>\n<%-- note --%>\n<div />\n", None)
+            .unwrap();
+        let document = tree.root_node().child(0).unwrap();
+        let comment = document.child(1).unwrap();
+        assert_eq!(comment.kind(), "server_comment");
+        assert_eq!(comment.start_position().row, 1);
+        assert_eq!(comment.start_position().column, 0);
+    }
 }

@@ -291,6 +291,6 @@ export default grammar({
 
     doctype_token: (_) => token(prec(RESERVED, /<![Dd][Oo][Cc][Tt][Yy][Pp][Ee]/)),
 
-    text: (_) => /[^<]+/,
+    text: (_) => /[^<\s][^<]*/,
   },
 });
