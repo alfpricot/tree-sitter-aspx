@@ -20,8 +20,7 @@ page directive exposes the language value
       (attribute
         (attribute_name)
         (quoted_attribute_value
-          (attribute_value))))
-    (text)))
+          (attribute_value))))))
 
 ================================================================================
 vb language
@@ -37,8 +36,7 @@ vb language
       (directive_name)
       (language_attribute
         (attribute_name)
-        (language_value)))
-    (text)))
+        (language_value)))))
 
 ================================================================================
 application directive
@@ -58,8 +56,7 @@ application directive
       (attribute
         (attribute_name)
         (quoted_attribute_value
-          (attribute_value))))
-    (text)))
+          (attribute_value))))))
 
 ================================================================================
 register import assembly and output cache
@@ -109,5 +106,4 @@ register import assembly and output cache
       (attribute
         (attribute_name)
         (quoted_attribute_value
-          (attribute_value))))
-    (text)))
+          (attribute_value))))))

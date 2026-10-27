@@ -32,8 +32,7 @@ client script and style are raw text
             (attribute_value))))
       (c_sharp_code)
       (end_tag
-        (tag_name)))
-    (text)))
+        (tag_name)))))
 
 ================================================================================
 server script follows the page language
@@ -63,5 +62,4 @@ server script follows the page language
             (attribute_value))))
       (vb_code)
       (end_tag
-        (tag_name)))
-    (text)))
+        (tag_name)))))
