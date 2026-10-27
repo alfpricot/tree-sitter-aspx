@@ -1,35 +1,31 @@
 # tree-sitter-aspx
 
-A [tree-sitter](https://tree-sitter.github.io/tree-sitter/) grammar for ASP.NET Web Forms markup: `.aspx` pages, `.ascx` user controls, `.master` master pages, and the directive headers of `.asax`, `.asmx`, and `.ashx` files.
+[![Verify](https://github.com/alfpricot/tree-sitter-aspx/actions/workflows/verify.yml/badge.svg?branch=dev)](https://github.com/alfpricot/tree-sitter-aspx/actions/workflows/verify.yml)
+[![Crates.io](https://img.shields.io/crates/v/tree-sitter-aspx)](https://crates.io/crates/tree-sitter-aspx)
 
-Classic ASP (`.asp` with VBScript) and Razor (`.cshtml`, `.vbhtml`) are different languages and are out of scope. Code-behind files (`.aspx.cs`, `.aspx.vb`) are ordinary C# or VB.NET and are not parsed by this grammar.
+A [tree-sitter](https://tree-sitter.github.io/tree-sitter/) grammar for ASP.NET Web Forms markup: `.aspx` pages, `.ascx` user controls, `.master` master pages, and the directive headers of `.asax`, `.asmx`, and `.ashx` files, with Node and Rust bindings. Classic ASP (`.asp` with VBScript) and Razor (`.cshtml`, `.vbhtml`) are different languages and are out of scope, and code-behind files (`.aspx.cs`, `.aspx.vb`) are ordinary C# or VB.NET that this grammar does not parse.
+
+## Installation
+
+```sh
+npm install tree-sitter-aspx   # Node
+cargo add tree-sitter-aspx     # Rust
+```
+
+### Requirements
+
+- **Node:** the `tree-sitter` package, version `^0.25.0`, is an optional peer dependency. The binding is a Node-API addon with prebuilt copies for Linux and Windows; on any other platform the install compiles it from source and needs a C/C++ toolchain that `node-gyp` can use.
+- **Rust:** 1.85 or newer. The crate depends only on `tree-sitter-language`, so the `tree-sitter` version your own crate uses is the one that parses.
+
+## Usage
 
 The grammar parses directives, server comments, HTML comments, code nuggets, `<script>` and `<style>` elements, and tags with attributes. It does not validate HTML. Void tags (`br`, `img`, `meta`, and the other HTML void elements) do not swallow the following markup. An end tag closes the nearest open element; the names are not required to match. `<script>` and `<style>` bodies are raw text, so `<` inside JavaScript or CSS is not a tag.
 
-## Embedded C# and VB.NET
+The C# and VB.NET inside a page are exposed as `c_sharp_code` and `vb_code` nodes, with injection queries for editors. See [docs/EMBEDDED_CODE.md](docs/EMBEDDED_CODE.md).
 
-Code nuggets and server-script bodies are opaque ranges. The page `Language` attribute (`C#` or `VB`, any casing) is a `language_value` node, and the scanner labels each later nugget `c_sharp_code` or `vb_code`. When the attribute is absent, the label is `c_sharp_code`.
+### Node
 
-| Node | What it is |
-| --- | --- |
-| `encoded_expression`, `output_expression`, `binding_expression` | `<%: %>`, `<%= %>`, `<%# %>` |
-| `statement_block` | `<% %>` |
-| `expression_builder` / `expression_value` | `<%$ %>`, not C# or VB |
-| `server_comment` | `<%-- --%>`, not code |
-| `c_sharp_code`, `vb_code` | The bytes inside a nugget or a `<script>` body |
-| `handler_code` | Everything after a `WebHandler` or `WebService` directive that is not a `<script>` element |
-
-`queries/injections.scm` maps those code nodes to `c_sharp` or `vb`. Statement blocks set `injection.combined`, so `<% if (ready) { %>` … `<% } %>` is one injected document and the markup between them is not part of it. Output, encoded, and binding nuggets are injected one by one. A `<script>` whose start tag has `runat="server"` keeps the page language. Any other `<script>` body is injected as JavaScript, even though the node is still `c_sharp_code` or `vb_code`. `<style>` bodies are injected as CSS.
-
-A consumer that counts executable code should count `c_sharp_code` and `vb_code` bytes, and should skip a `<script>` body whose start tag has no `runat="server"`. Markup, attribute text, style text, expression-builder text, and server comments are not executable code. Server comments are their own node kind.
-
-`.ashx` and `.asmx` files are a `WebHandler` or `WebService` directive plus either a `<script runat="server">` element or the rest of the file as `handler_code`. `.asax` stays markup.
-
-Some legacy pages are UTF-16. Decode them to UTF-8 before parsing. `tools/corpus-check.mjs` does that.
-
-## Node package metadata
-
-The default export exposes `name`, `language`, and `nodeTypeInfo` on Linux and Windows. `nodeTypeInfo` contains the entries from `src/node-types.json`.
+The default export exposes `name`, `language`, and `nodeTypeInfo` (the entries from `src/node-types.json`) on every platform, plus the `HIGHLIGHTS_QUERY` and `INJECTIONS_QUERY` strings.
 
 ```js
 import Parser from 'tree-sitter';
@@ -41,7 +37,7 @@ const tree = parser.parse('<%@ Page Language="C#" %>');
 console.log(tree.rootNode.toString());
 ```
 
-## Rust
+### Rust
 
 ```rust
 let mut parser = tree_sitter::Parser::new();
@@ -50,15 +46,12 @@ parser
     .expect("Error loading ASPX parser");
 ```
 
-`LANGUAGE` is a `tree_sitter_language::LanguageFn`. The crate's runtime dependency is `tree-sitter-language`, so the consuming crate's own `tree-sitter` version is what parses.
+`LANGUAGE` is a `tree_sitter_language::LanguageFn`. The crate also exports `NODE_TYPES`, `HIGHLIGHTS_QUERY`, and `INJECTIONS_QUERY`.
 
-## Building
+## How to contribute
 
-```sh
-npm ci --ignore-scripts
-npm rebuild tree-sitter-cli
-npx --no-install tree-sitter generate
-cargo build
-```
+Branch from `dev` and open pull requests against it. [CONTRIBUTING.md](CONTRIBUTING.md) covers building the parser, running the checks CI runs, and the pull request rules; [ARCHITECTURE.md](ARCHITECTURE.md) explains how the pieces fit together.
 
-Release jobs require a version tag on `main` matching the Cargo package version and publish from the commit that passed verification. The npm and GitHub Packages archives carry that same version in both `package.json` and `tree-sitter.json`.
+## License
+
+MIT. See [LICENSE](LICENSE).
