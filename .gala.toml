@@ -1,0 +1,25 @@
+# Release configuration for gala (https://github.com/alfpricot/gala).
+#
+# A single package whose version lives in Cargo.toml: package.json and
+# tree-sitter.json are set from the tag at publish time by release.yml and
+# are never committed.
+kind = "app"
+manager = "cargo"
+
+# gala stops after tagging. release.yml publishes to crates.io, npm, and
+# GitHub Packages when it is dispatched for the new tag.
+publish = false
+
+# release.yml creates the GitHub Release itself, after every registry is live.
+githubRelease = false
+
+# A release only cuts from main (the promotion target), never from dev.
+releaseBranches = ["main"]
+
+# After the push, fast-forward dev onto the release commit so both branches
+# agree on the release. A plain push: non-fast-forward is rejected, never forced.
+syncBranch = "dev"
+
+tagPrefix = "v"
+changelog = "CHANGELOG.md"
+remote = "origin"

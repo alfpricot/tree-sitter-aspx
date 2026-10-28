@@ -54,7 +54,7 @@ The build and release process touches these services:
 
 **Pull requests and pushes to `dev` and `main`** run the `Verify` workflow (`verify.yml`). Its jobs scan for secrets (Gitleaks), lint workflows (actionlint), validate YAML, check the pull request title against Conventional Commits, regenerate the parser and fail if it differs from the committed copy, lint and format-check the JavaScript, run the corpus tests, check fixtures, run `cargo fmt`, `cargo clippy`, and `cargo test`, verify the package contents, rebuild against tree-sitter 0.26 (`consumer-pin`), and build and test the Node binding on Linux (and on Windows when binding files changed). A final `ci` job rolls these up into the single `Verify` status that branch rulesets require.
 
-**Releases** are cut from `main`. `release-plz.yml` runs on each push to `main`, computes the next version and changelog from Conventional Commits, and opens a `chore(release)` pull request. Merging it makes `release-tag.yml` push the `vX.Y.Z` tag and dispatch `release.yml`, which first re-verifies the tagged commit (the tag must be on `main` and match the Cargo package version), builds Node prebuilds for Linux and Windows and the WASM grammar, then publishes the crate, the npm package, the GitHub Packages copy, and the GitHub Release. The npm and GitHub Packages archives carry the release version in both `package.json` and `tree-sitter.json`. `sync-dev-from-main.yml` opens a pull request merging `main` back into `dev` after each push to `main`.
+**Releases** are cut from `main`. `gala-release.yml` runs on each push to `main` and runs gala (configured in `.gala.toml`), which computes the next version from Conventional Commits, bumps `Cargo.toml`, writes the `CHANGELOG.md` entry, commits and tags it, pushes both over a deploy key, and fast-forwards `dev` onto the release commit. When gala cut a release, the workflow then dispatches `release.yml` for the new tag. `release.yml` first re-verifies the tagged commit (the tag must be on `main` and match the Cargo package version), builds Node prebuilds for Linux and Windows and the WASM grammar, then publishes the crate, the npm package, the GitHub Packages copy, and the GitHub Release. The npm and GitHub Packages archives carry the release version in both `package.json` and `tree-sitter.json`; those two files are set from the tag at publish time and never committed.
 
 **Maintenance:** `dependabot.yml` updates Cargo, npm, and GitHub Actions dependencies against `dev`, and `cache-cleanup.yml` deletes Actions caches left by closed pull requests and deleted branches.
 
@@ -73,4 +73,5 @@ There is no deployment: the repository ships a library and its bindings.
 | `tools/` | CI and release check scripts |
 | `docs/` | Reference documents moved out of the README |
 | `.github/workflows/` | Verify, release, and maintenance workflows |
-| `release-plz.toml` | Release tooling configuration |
+| `.oxlintrc.json`, `.oxfmtrc.json` | JavaScript lint and format configuration |
+| `.gala.toml` | Release tooling configuration |

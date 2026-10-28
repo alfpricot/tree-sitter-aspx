@@ -1,0 +1,41 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "unicorn", "oxc"],
+  "categories": {
+    "correctness": "error"
+  },
+  "rules": {
+    // `(_) => ...` is this grammar's own convention for "the tree-sitter
+    // $ param is unused in this rule" (for example `extras` in grammar.js).
+    "no-unused-vars": ["error", { "argsIgnorePattern": "^_$" }],
+    // Grammar regexes are compiled by tree-sitter's Rust regex engine, not by JS: it needs `\[`
+    // escaped inside a character class (a bare `[` starts a nested class and fails generate), so
+    // an escape this rule reports as useless is required there.
+    "no-useless-escape": "off"
+  },
+  // grammar.js calls tree-sitter DSL functions (seq, choice,
+  // field, alias, prec, optional, repeat, repeat1, token, ...) as implicit
+  // globals — the tree-sitter CLI evaluates grammar.js in a context that
+  // provides them, so they are declared read-only globals here rather than
+  // imported. tools/*.mjs and bindings/node/*.js run under Node (console,
+  // process, URL), which `env` provides.
+  "globals": {
+    "grammar": "readonly",
+    "seq": "readonly",
+    "choice": "readonly",
+    "optional": "readonly",
+    "repeat": "readonly",
+    "repeat1": "readonly",
+    "prec": "readonly",
+    "field": "readonly",
+    "alias": "readonly",
+    "token": "readonly",
+    "blank": "readonly",
+    "reserved": "readonly"
+  },
+  "env": {
+    "builtin": true,
+    "node": true
+  },
+  "ignorePatterns": ["src/**", "node_modules/**", ".worktrees/**"]
+}

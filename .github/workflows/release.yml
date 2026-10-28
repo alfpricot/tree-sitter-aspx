@@ -28,10 +28,11 @@
 #                      an older tag re-dispatched by hand can predate them).
 #
 #                      The workflow_dispatch trigger exists because
-#                      release-tag.yml pushes the tag using GITHUB_TOKEN, and
-#                      GitHub never fires further workflow runs off a
-#                      GITHUB_TOKEN-authored push; release-tag.yml dispatches
-#                      this workflow with the tag it just pushed instead.
+#                      gala-release.yml's release commit carries the skip-ci
+#                      marker, which can also suppress the tag-push trigger
+#                      here; gala-release.yml dispatches this workflow with
+#                      the tag gala just pushed, using that tag as the ref so
+#                      the provenance check sees GITHUB_REF as the tag.
 #
 #                      Package versions (package.json, tree-sitter.json) are
 #                      set from the tag at publish time in the working tree
@@ -56,7 +57,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  TREE_SITTER_CLI_VERSION: '0.27.0'
+  TREE_SITTER_CLI_VERSION: '0.27.1'
   PREBUILDIFY_VERSION: '6.0.1'
 
 permissions:
