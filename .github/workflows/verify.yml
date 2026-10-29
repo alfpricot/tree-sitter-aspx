@@ -138,6 +138,11 @@ jobs:
       - name: Test CI policy
         run: node --test tools/*.test.mjs
 
+      - name: Check Cargo.toml, package.json, and tree-sitter.json agree
+        # gala refuses to plan a release when they disagree; failing here
+        # catches the drift on the pull request instead of on main.
+        run: node tools/ci-policy.mjs versions
+
       - name: Validate YAML files
         run: |
           python3 -m pip install --disable-pip-version-check --quiet pyyaml
