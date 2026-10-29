@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.1.3 (2026-10-29)
+
+### Bug Fixes
+
+* **grammar:** stop text tokens from starting at whitespace (#24)
+
 ## [0.1.2](https://github.com/alfpricot/tree-sitter-aspx/compare/v0.1.1...v0.1.2) - 2026-10-04
 
 ### Other
