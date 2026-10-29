@@ -10,8 +10,9 @@
 #                      to the public npm registry and to GitHub Packages for
 #                      the given tag, then creates the corresponding GitHub
 #                      Release. The tag must point at a commit on main whose
-#                      Cargo.toml version matches it; the release policy
-#                      script validates that before anything is published.
+#                      Cargo.toml, package.json, and tree-sitter.json
+#                      versions all match it; the release policy script
+#                      validates that before anything is published.
 #                      GitHub Packages requires an npm package name scoped to
 #                      the repository owner, so that job publishes under
 #                      @<owner>/tree-sitter-aspx in its own short-lived
@@ -34,11 +35,12 @@
 #                      the tag gala just pushed, using that tag as the ref so
 #                      the provenance check sees GITHUB_REF as the tag.
 #
-#                      Package versions (package.json, tree-sitter.json) are
-#                      set from the tag at publish time in the working tree
-#                      only, never committed back. Every publish step is safe
-#                      to repeat: it checks whether the version is already
-#                      live before publishing.
+#                      gala writes every version file (Cargo.toml,
+#                      package.json, tree-sitter.json) and regenerates the
+#                      parser in the release commit, so the publish jobs use
+#                      the tagged files as committed. Every publish step is
+#                      safe to repeat: it checks whether the version is
+#                      already live before publishing.
 # =============================================================================
 
 name: Release
@@ -84,7 +86,7 @@ jobs:
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '24.x'
-      - name: Resolve a release tag on main and check its Cargo version
+      - name: Resolve a release tag on main and check its version files
         id: release
         run: |
           node tools/release-policy.mjs resolve
@@ -263,11 +265,11 @@ jobs:
           pattern: prebuilds-*
           path: prebuilds
           merge-multiple: true
-      - name: Set package version from tag
+      - name: Check the package versions match the tag
         id: package
         env:
           RELEASE_COMMIT: ${{ needs.verify.outputs.commit }}
-        run: node .release-tools/tools/release-policy.mjs prepare-npm
+        run: node .release-tools/tools/release-policy.mjs check-npm
       - name: Publish (skip if this version is already live)
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -325,11 +327,11 @@ jobs:
           pattern: prebuilds-*
           path: prebuilds
           merge-multiple: true
-      - name: Set package name and version for GitHub Packages
+      - name: Set the package name for GitHub Packages
         run: |
           set -euo pipefail
           npm pkg set "name=@${OWNER}/tree-sitter-aspx"
-          node .release-tools/tools/release-policy.mjs prepare-npm
+          node .release-tools/tools/release-policy.mjs check-npm
       - name: Publish (skip if this version is already live)
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,8 +1,9 @@
 # Release configuration for gala (https://github.com/alfpricot/gala).
 #
-# A single package whose version lives in Cargo.toml: package.json and
-# tree-sitter.json are set from the tag at publish time by release.yml and
-# are never committed.
+# A single package versioned in three files: gala bumps Cargo.toml,
+# package.json, and tree-sitter.json together, refreshes
+# package-lock.json, and regenerates the parser, so the release commit is
+# exactly what release.yml publishes.
 kind = "app"
 manager = "cargo"
 
@@ -23,3 +24,17 @@ syncBranch = "dev"
 tagPrefix = "v"
 changelog = "CHANGELOG.md"
 remote = "origin"
+
+# The generated parser embeds tree-sitter.json's version, so the release
+# commit regenerates it with the CLI version package.json pins; Verify's
+# generated-parser check then passes on the release commit too.
+postBump = ["npx --no-install tree-sitter generate"]
+postBumpPaths = ["src/parser.c", "src/grammar.json", "src/node-types.json"]
+
+[[versionFile]]
+path = "package.json"
+key = "version"
+
+[[versionFile]]
+path = "tree-sitter.json"
+key = "metadata.version"
