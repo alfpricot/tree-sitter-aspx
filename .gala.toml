@@ -1,0 +1,40 @@
+# Release configuration for gala (https://github.com/alfpricot/gala).
+#
+# A single package versioned in three files: gala bumps Cargo.toml,
+# package.json, and tree-sitter.json together, refreshes
+# package-lock.json, and regenerates the parser, so the release commit is
+# exactly what release.yml publishes.
+kind = "app"
+manager = "cargo"
+
+# gala stops after tagging. release.yml publishes to crates.io, npm, and
+# GitHub Packages when it is dispatched for the new tag.
+publish = false
+
+# release.yml creates the GitHub Release itself, after every registry is live.
+githubRelease = false
+
+# A release only cuts from main (the promotion target), never from dev.
+releaseBranches = ["main"]
+
+# After the push, fast-forward dev onto the release commit so both branches
+# agree on the release. A plain push: non-fast-forward is rejected, never forced.
+syncBranch = "dev"
+
+tagPrefix = "v"
+changelog = "CHANGELOG.md"
+remote = "origin"
+
+# The generated parser embeds tree-sitter.json's version, so the release
+# commit regenerates it with the CLI version package.json pins; Verify's
+# generated-parser check then passes on the release commit too.
+postBump = ["npx --no-install tree-sitter generate"]
+postBumpPaths = ["src/parser.c", "src/grammar.json", "src/node-types.json"]
+
+[[versionFile]]
+path = "package.json"
+key = "version"
+
+[[versionFile]]
+path = "tree-sitter.json"
+key = "metadata.version"

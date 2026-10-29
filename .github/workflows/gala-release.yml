@@ -1,0 +1,118 @@
+# =============================================================================
+#  tree-sitter-aspx · GitHub Actions
+# -----------------------------------------------------------------------------
+#  File                gala-release.yml
+#  Workflow name       Gala release
+#  Type                Entrypoint (runs in this repo only)
+#  Triggers            push (main branch)
+#                      workflow_dispatch
+#  Purpose             Cuts a release when a promotion lands on main. gala
+#                      (configured in .gala.toml) reads the Conventional
+#                      Commits since the latest tag, bumps the version in
+#                      Cargo.toml, package.json, and tree-sitter.json,
+#                      refreshes package-lock.json, regenerates the parser
+#                      (which embeds the tree-sitter.json version), writes the
+#                      CHANGELOG.md entry, commits it (the commit body carries
+#                      the skip-ci marker), tags it, pushes the branch and tag
+#                      atomically, and then fast-forwards dev onto the release
+#                      commit. When no release is due it changes nothing.
+#
+#                      The pushes go over the RELEASE_DEPLOY_KEY deploy key:
+#                      this repo's rulesets require every change on main and
+#                      dev to land through a pull request and block creating
+#                      v* tags, and on a personal-account repository a deploy
+#                      key is the bypass actor available to a workflow.
+#
+#                      The skip-ci marker in the release commit body can also
+#                      suppress the tag-push trigger of release.yml, so after
+#                      gala finishes this workflow dispatches release.yml
+#                      itself for the tag gala reports in its workflow outputs
+#                      (nothing is dispatched when no release was due). The
+#                      dispatch uses the tag as its ref because release.yml's
+#                      provenance check needs GITHUB_REF to be the tag.
+#                      release.yml's publish steps are safe to repeat, so a
+#                      duplicate trigger is harmless.
+# =============================================================================
+
+name: Gala release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: gala-release
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  GALA_VERSION: '0.3.1'
+
+jobs:
+  release:
+    if: github.ref == 'refs/heads/main'
+    # Job-level elevation: dispatching release.yml needs actions: write. The
+    # git pushes authenticate with the deploy key, not the workflow token.
+    permissions:
+      contents: read
+      actions: write
+      packages: read
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout (gala reads tags and history)
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          # origin becomes an SSH remote authenticated by the deploy key, so
+          # gala's atomic push and dev sync use the ruleset bypass.
+          ssh-key: ${{ secrets.RELEASE_DEPLOY_KEY }}
+      - name: Configure git identity
+        # gala makes the release commit with the runner's git, which refuses
+        # to commit without an identity.
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      - name: Install Rust toolchain
+        # gala's cargo manager runs cargo to bump the version and refresh the lockfile.
+        uses: dtolnay/rust-toolchain@4360b52568e2003a75bf9bc1d59f33a8e3fc893c # v1.97.0
+      - name: Set up Node.js
+        # gala refreshes package-lock.json with npm, and its postBump hook
+        # regenerates the parser with the tree-sitter-cli pinned here.
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24.x'
+          # Resolves @alfpricot/gala from GitHub Packages; every other
+          # package still comes from the public npm registry.
+          registry-url: https://npm.pkg.github.com
+          scope: '@alfpricot'
+      - name: Install gala
+        # The prebuilt gala binary from GitHub Packages; the token needs
+        # packages: read, and each gala package grants this repository access.
+        env:
+          NODE_AUTH_TOKEN: ${{ github.token }}
+        run: npm install --global "@alfpricot/gala@${GALA_VERSION}"
+
+      - name: Install the tree-sitter CLI
+        # --ignore-scripts skips this package's own node-gyp-build install
+        # script, which also skips the CLI's binary download; the rebuild
+        # fetches it.
+        run: |
+          npm ci --ignore-scripts
+          npm rebuild tree-sitter-cli
+      - name: Release
+        id: gala
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gala release
+      - name: Dispatch the publish workflow for the new tag
+        if: steps.gala.outputs.released == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.gala.outputs.tag }}
+        run: gh workflow run release.yml --ref "$TAG" -f "tag=${TAG}"

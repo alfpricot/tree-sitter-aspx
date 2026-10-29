@@ -10,8 +10,9 @@
 #                      to the public npm registry and to GitHub Packages for
 #                      the given tag, then creates the corresponding GitHub
 #                      Release. The tag must point at a commit on main whose
-#                      Cargo.toml version matches it; the release policy
-#                      script validates that before anything is published.
+#                      Cargo.toml, package.json, and tree-sitter.json
+#                      versions all match it; the release policy script
+#                      validates that before anything is published.
 #                      GitHub Packages requires an npm package name scoped to
 #                      the repository owner, so that job publishes under
 #                      @<owner>/tree-sitter-aspx in its own short-lived
@@ -28,16 +29,18 @@
 #                      an older tag re-dispatched by hand can predate them).
 #
 #                      The workflow_dispatch trigger exists because
-#                      release-tag.yml pushes the tag using GITHUB_TOKEN, and
-#                      GitHub never fires further workflow runs off a
-#                      GITHUB_TOKEN-authored push; release-tag.yml dispatches
-#                      this workflow with the tag it just pushed instead.
+#                      gala-release.yml's release commit carries the skip-ci
+#                      marker, which can also suppress the tag-push trigger
+#                      here; gala-release.yml dispatches this workflow with
+#                      the tag gala just pushed, using that tag as the ref so
+#                      the provenance check sees GITHUB_REF as the tag.
 #
-#                      Package versions (package.json, tree-sitter.json) are
-#                      set from the tag at publish time in the working tree
-#                      only, never committed back. Every publish step is safe
-#                      to repeat: it checks whether the version is already
-#                      live before publishing.
+#                      gala writes every version file (Cargo.toml,
+#                      package.json, tree-sitter.json) and regenerates the
+#                      parser in the release commit, so the publish jobs use
+#                      the tagged files as committed. Every publish step is
+#                      safe to repeat: it checks whether the version is
+#                      already live before publishing.
 # =============================================================================
 
 name: Release
@@ -56,7 +59,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  TREE_SITTER_CLI_VERSION: '0.27.0'
+  TREE_SITTER_CLI_VERSION: '0.27.1'
   PREBUILDIFY_VERSION: '6.0.1'
 
 permissions:
@@ -80,10 +83,10 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
       - name: Set up Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '24.x'
-      - name: Resolve a release tag on main and check its Cargo version
+      - name: Resolve a release tag on main and check its version files
         id: release
         run: |
           node tools/release-policy.mjs resolve
@@ -96,7 +99,7 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@4360b52568e2003a75bf9bc1d59f33a8e3fc893c # v1.97.0
       - name: Cache cargo registry and build artifacts
-        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
       - name: Regenerate the parser from grammar.js
         run: |
           npm ci --ignore-scripts
@@ -129,7 +132,7 @@ jobs:
           ref: ${{ needs.verify.outputs.commit }}
           persist-credentials: false
       - name: Set up Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '24.x'
       - name: Install dependencies
@@ -143,7 +146,7 @@ jobs:
       - name: Build the native Node addon prebuild
         run: npx --yes prebuildify@${{ env.PREBUILDIFY_VERSION }} --napi --strip
       - name: Upload the prebuild
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: prebuilds-${{ matrix.os }}
           path: prebuilds/
@@ -165,7 +168,7 @@ jobs:
           ref: ${{ needs.verify.outputs.commit }}
           persist-credentials: false
       - name: Set up Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '24.x'
       - name: Build the WASM grammar
@@ -181,7 +184,7 @@ jobs:
           test -f "$file"
           echo "file=$file" >> "$GITHUB_OUTPUT"
       - name: Upload the WASM build
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: wasm-build
           path: ${{ steps.wasm.outputs.file }}
@@ -205,7 +208,7 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@4360b52568e2003a75bf9bc1d59f33a8e3fc893c # v1.97.0
       - name: Cache cargo registry and build artifacts
-        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
       - name: Publish (skip if this version is already live)
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
@@ -252,21 +255,21 @@ jobs:
           sparse-checkout-cone-mode: false
           persist-credentials: false
       - name: Set up Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '24.x'
           registry-url: https://registry.npmjs.org/
       - name: Download the prebuilt native addons
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           pattern: prebuilds-*
           path: prebuilds
           merge-multiple: true
-      - name: Set package version from tag
+      - name: Check the package versions match the tag
         id: package
         env:
           RELEASE_COMMIT: ${{ needs.verify.outputs.commit }}
-        run: node .release-tools/tools/release-policy.mjs prepare-npm
+        run: node .release-tools/tools/release-policy.mjs check-npm
       - name: Publish (skip if this version is already live)
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -313,22 +316,22 @@ jobs:
           sparse-checkout-cone-mode: false
           persist-credentials: false
       - name: Set up Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '24.x'
           registry-url: https://npm.pkg.github.com
           scope: '@${{ github.repository_owner }}'
       - name: Download the prebuilt native addons
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           pattern: prebuilds-*
           path: prebuilds
           merge-multiple: true
-      - name: Set package name and version for GitHub Packages
+      - name: Set the package name for GitHub Packages
         run: |
           set -euo pipefail
           npm pkg set "name=@${OWNER}/tree-sitter-aspx"
-          node .release-tools/tools/release-policy.mjs prepare-npm
+          node .release-tools/tools/release-policy.mjs check-npm
       - name: Publish (skip if this version is already live)
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -362,7 +365,7 @@ jobs:
           persist-credentials: false
       - name: Download the WASM build
         if: needs.build-wasm.result == 'success'
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: wasm-build
       - name: Create release
