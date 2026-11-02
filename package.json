@@ -21,8 +21,8 @@
   },
   "devDependencies": {
     "node-gyp": "13.1.0",
-    "oxfmt": "0.74.0",
-    "oxlint": "1.89.0",
+    "oxfmt": "0.75.0",
+    "oxlint": "1.90.0",
     "tree-sitter": "0.25.1",
     "tree-sitter-cli": "0.27.1"
   },
