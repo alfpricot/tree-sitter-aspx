@@ -205,3 +205,28 @@ directive inside a script body
       (c_sharp_code)
       (end_tag
         (tag_name)))))
+
+================================================================================
+end tags in any casing with whitespace before the bracket
+================================================================================
+
+<script>a</SCRIPT >
+<style>b</Style
+>
+
+---
+
+(source_file
+  (document
+    (script_element
+      (start_tag
+        (tag_name))
+      (c_sharp_code)
+      (end_tag
+        (tag_name)))
+    (style_element
+      (start_tag
+        (tag_name))
+      (style_text)
+      (end_tag
+        (tag_name)))))

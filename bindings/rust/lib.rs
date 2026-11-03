@@ -95,3 +95,111 @@ mod tests {
         assert_eq!(comment.start_position().column, 0);
     }
 }
+
+/// Checks `queries/injections.scm` against small pages: which ranges are
+/// injected, and as which language.
+#[cfg(test)]
+mod injection_tests {
+    use super::*;
+    use tree_sitter::{Parser, Query, QueryCursor, StreamingIterator};
+
+    /// Every injected range in `source`, as (language, text) pairs in
+    /// document order.
+    fn injections(source: &str) -> Vec<(String, String)> {
+        let language = LANGUAGE.into();
+        let mut parser = Parser::new();
+        parser.set_language(&language).unwrap();
+        let tree = parser.parse(source, None).unwrap();
+        assert!(!tree.root_node().has_error(), "test page has a parse error");
+        let query = Query::new(&language, INJECTIONS_QUERY).unwrap();
+        let content = query.capture_index_for_name("injection.content").unwrap();
+        let mut cursor = QueryCursor::new();
+        let mut found = Vec::new();
+        let mut matches = cursor.matches(&query, tree.root_node(), source.as_bytes());
+        while let Some(m) = matches.next() {
+            let language = query
+                .property_settings(m.pattern_index)
+                .iter()
+                .find(|p| &*p.key == "injection.language")
+                .and_then(|p| p.value.as_deref())
+                .unwrap()
+                .to_string();
+            for node in m.nodes_for_capture_index(content) {
+                let text = node.utf8_text(source.as_bytes()).unwrap();
+                found.push((language.clone(), text.to_string()));
+            }
+        }
+        found
+    }
+
+    fn pairs(expected: &[(&str, &str)]) -> Vec<(String, String)> {
+        expected
+            .iter()
+            .map(|(l, t)| (l.to_string(), t.to_string()))
+            .collect()
+    }
+
+    #[test]
+    fn nuggets_follow_the_page_language() {
+        assert_eq!(
+            injections("<%= Name %><%: Title %>"),
+            pairs(&[("c_sharp", " Name "), ("c_sharp", " Title ")])
+        );
+        assert_eq!(
+            injections("<%@ Page Language=\"VB\" %><%# Eval(\"X\") %>"),
+            pairs(&[("vb", " Eval(\"X\") ")])
+        );
+    }
+
+    #[test]
+    fn expression_builders_are_not_injected() {
+        assert!(injections("<%$ AppSettings:Key %>").is_empty());
+    }
+
+    #[test]
+    fn server_scripts_keep_the_page_language_in_any_runat_spelling() {
+        for tag in [
+            "<script runat=\"server\">",
+            "<script runat=\"SERVER\">",
+            "<script RunAt='Server'>",
+            "<script runat=server>",
+        ] {
+            let page = format!("{tag}void F() {{}}</script>");
+            assert_eq!(
+                injections(&page),
+                pairs(&[("c_sharp", "void F() {}")]),
+                "{tag}"
+            );
+        }
+    }
+
+    #[test]
+    fn client_scripts_and_styles_are_javascript_and_css() {
+        assert_eq!(
+            injections("<script type=\"text/javascript\">go();</script><style>a{}</style>"),
+            pairs(&[("javascript", "go();"), ("css", "a{}")])
+        );
+    }
+
+    #[test]
+    fn a_nugget_in_a_client_script_is_injected_separately() {
+        assert_eq!(
+            injections("<script>var id = '<%= Ctl.ClientID %>';</script>"),
+            pairs(&[
+                ("javascript", "var id = '"),
+                ("c_sharp", " Ctl.ClientID "),
+                ("javascript", "';"),
+            ])
+        );
+    }
+
+    #[test]
+    fn handler_code_follows_the_directive_language() {
+        assert_eq!(
+            injections(
+                "<%@ WebHandler Language=\"VB\" Class=\"H\" %>\nPublic Class H\nEnd Class\n"
+            ),
+            pairs(&[("vb", "Public Class H\nEnd Class\n")])
+        );
+    }
+}

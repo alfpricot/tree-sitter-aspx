@@ -10,6 +10,7 @@ import { tmpdir } from 'node:os';
 import { basename, extname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { fixtureResult, resolveTreeSitterCli } from './fixture-result.mjs';
+import { decodeWebForms } from './web-forms-encoding.mjs';
 
 const extensions = new Set(['.aspx', '.ascx', '.master', '.asax', '.asmx', '.ashx']);
 const repo = fileURLToPath(new URL('..', import.meta.url));
@@ -17,23 +18,6 @@ const root = process.argv[2];
 if (!root) {
   console.error('Usage: node tools/corpus-check.mjs <directory>');
   process.exit(2);
-}
-
-export function decodeWebForms(bytes) {
-  if (bytes.length >= 2 && bytes[0] === 0xff && bytes[1] === 0xfe) {
-    return Buffer.from(new TextDecoder('utf-16le').decode(bytes.subarray(2)));
-  }
-  if (bytes.length >= 2 && bytes[0] === 0xfe && bytes[1] === 0xff) {
-    return Buffer.from(new TextDecoder('utf-16be').decode(bytes.subarray(2)));
-  }
-  if (bytes.length >= 3 && bytes[0] === 0xef && bytes[1] === 0xbb && bytes[2] === 0xbf) {
-    return bytes.subarray(3);
-  }
-  // UTF-16 LE without a BOM: NUL bytes in the odd positions of an ASCII page.
-  if (bytes.length >= 8 && bytes[1] === 0 && bytes[3] === 0 && bytes[5] === 0) {
-    return Buffer.from(new TextDecoder('utf-16le').decode(bytes));
-  }
-  return bytes;
 }
 
 function walk(dir, out) {

@@ -118,3 +118,38 @@ server comment closes after a run of dashes
       (text)
       (end_tag
         (tag_name)))))
+
+================================================================================
+empty nuggets
+================================================================================
+
+<%%>
+<%=%>
+
+---
+
+(source_file
+  (document
+    (statement_block)
+    (output_expression)))
+
+================================================================================
+unterminated nugget at end of file
+================================================================================
+
+<p>x</p>
+<%= Value
+
+---
+
+(source_file
+  (document
+    (element
+      (start_tag
+        (tag_name))
+      (text)
+      (end_tag
+        (tag_name)))
+    (output_expression
+      (c_sharp_code)
+      (MISSING "%>"))))

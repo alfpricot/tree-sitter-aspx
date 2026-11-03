@@ -256,3 +256,22 @@ long unrecognized language value is consumed whole
         (language_value)))
     (statement_block
       (c_sharp_code))))
+
+================================================================================
+lowercase directive and attribute names with a single-quoted language
+================================================================================
+
+<%@ page language='vb' %>
+<% Dim x %>
+
+---
+
+(source_file
+  (document
+    (directive
+      (directive_name)
+      (language_attribute
+        (attribute_name)
+        (language_value)))
+    (statement_block
+      (vb_code))))
