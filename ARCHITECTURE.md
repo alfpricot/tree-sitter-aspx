@@ -48,7 +48,7 @@ The build and release process touches these services:
 
 - **crates.io** receives the Rust crate.
 - **npm** receives the Node package; **GitHub Packages** receives a copy scoped to the repository owner, because GitHub Packages requires the scope to match the owner.
-- **GitHub Releases** receives a WASM build for `web-tree-sitter` consumers, plus `test/node-kinds.txt` and `versions.json` as the node-kind stability record.
+- **GitHub Releases** receives a WASM build for `web-tree-sitter` consumers, plus `test/node-kinds.txt` as the node-kind stability record.
 
 ## Build, test, release, and deploy
 

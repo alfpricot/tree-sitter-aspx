@@ -7,6 +7,7 @@ import { pathToFileURL } from 'node:url';
 import test from 'node:test';
 import {
   canAttest,
+  cargoVersion,
   checkVersions,
   prepareNpm,
   releaseVersion,
@@ -148,4 +149,15 @@ test('a tag cut before gala wrote the version files keeps publish-time versions'
 test('an unknown command fails instead of passing without doing anything', () => {
   assert.throws(() => runCommand('publish-npm', {}), /unknown command "publish-npm"/);
   assert.throws(() => runCommand(undefined, {}), /unknown command/);
+});
+
+test('the Cargo version comes from [package], not from another table', () => {
+  const manifest =
+    '[workspace.package]\nversion = "9.9.9"\n\n[package]\nname = "x"\nversion = "0.1.0"\n\n[dependencies.y]\nversion = "2.0.0"\n';
+  assert.equal(cargoVersion(manifest), '0.1.0');
+  assert.equal(cargoVersion('[dependencies.y]\nversion = "2.0.0"\n'), undefined);
+});
+
+test('Cargo.toml, package.json, and tree-sitter.json agree on the current version', () => {
+  checkVersions(new URL('../', import.meta.url));
 });
