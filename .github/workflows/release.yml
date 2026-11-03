@@ -24,9 +24,8 @@
 #                      node-gyp-build prefers a matching prebuild over a
 #                      source build. A WASM build is attached to the GitHub
 #                      Release for web-tree-sitter consumers, along with
-#                      test/node-kinds.txt and versions.json as the node-kind
-#                      stability surface (only the files the checkout has —
-#                      an older tag re-dispatched by hand can predate them).
+#                      test/node-kinds.txt as the node-kind stability
+#                      surface.
 #
 #                      The workflow_dispatch trigger exists because
 #                      gala-release.yml's release commit carries the skip-ci
@@ -390,13 +389,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          # A manual re-dispatch can target a tag cut before these files
-          # existed; upload only what the checkout has, so a recovery run
-          # against an old tag does not fail the whole job.
-          assets=()
-          for f in test/node-kinds.txt versions.json; do
-            [ -f "$f" ] && assets+=("$f")
-          done
-          if [ "${#assets[@]}" -gt 0 ]; then
-            gh release upload "$TAG" "${assets[@]}" --clobber
-          fi
+          # Every release tag carries the snapshot, so a missing file means
+          # the checkout is wrong; fail rather than publish a release
+          # without it.
+          gh release upload "$TAG" test/node-kinds.txt --clobber

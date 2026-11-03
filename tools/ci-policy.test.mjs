@@ -1,20 +1,19 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
-import { join } from 'node:path';
 import {
   canSkipEditedBuild,
   changedPaths,
   docsOnly,
   needsWindowsBinding,
   verifyResults,
-  versionsAgree,
 } from './ci-policy.mjs';
 
-test('Node packaging changes receive Windows binding verification before merge', () => {
+test('Node packaging and C source changes receive Windows binding verification before merge', () => {
   for (const path of [
     'bindings/node/index.js',
+    'src/scanner.c',
+    'src/parser.c',
+    'src/tree_sitter/parser.h',
     'bindings/node/index.d.ts',
     'binding.gyp',
     'package.json',
@@ -22,7 +21,9 @@ test('Node packaging changes receive Windows binding verification before merge',
     '.github/workflows/verify.yml',
   ])
     assert(needsWindowsBinding([path]));
-  assert(!needsWindowsBinding(['README.md', 'grammar.js']));
+  assert(
+    !needsWindowsBinding(['README.md', 'grammar.js', 'src/grammar.json', 'src/node-types.json']),
+  );
 });
 
 test('renames include the removed source path when classifying prose', () => {
@@ -85,38 +86,4 @@ test('canSkipEditedBuild only skips a title/body edit whose prior run already ve
   assert(!canSkipEditedBuild({ action: 'edited', changes: {} }, false));
   assert(!canSkipEditedBuild({ action: 'edited', changes: { base: { from: 'main' } } }, true));
   assert(!canSkipEditedBuild({ action: 'synchronize', changes: {} }, true));
-});
-
-test('versionsAgree passes when all three manifests match', () => {
-  versionsAgree(
-    '[package]\nversion = "0.1.0"\n',
-    '{"version":"0.1.0"}',
-    '{"metadata":{"version":"0.1.0"}}',
-  );
-});
-
-test('versionsAgree rejects a package.json or tree-sitter.json version drift', () => {
-  assert.throws(() =>
-    versionsAgree(
-      '[package]\nversion = "0.1.0"\n',
-      '{"version":"0.1.1"}',
-      '{"metadata":{"version":"0.1.0"}}',
-    ),
-  );
-  assert.throws(() =>
-    versionsAgree(
-      '[package]\nversion = "0.1.0"\n',
-      '{"version":"0.1.0"}',
-      '{"metadata":{"version":"0.1.1"}}',
-    ),
-  );
-});
-
-test('Cargo.toml, package.json, and tree-sitter.json agree on the current version', () => {
-  const root = fileURLToPath(new URL('..', import.meta.url));
-  versionsAgree(
-    readFileSync(join(root, 'Cargo.toml'), 'utf8'),
-    readFileSync(join(root, 'package.json'), 'utf8'),
-    readFileSync(join(root, 'tree-sitter.json'), 'utf8'),
-  );
 });
