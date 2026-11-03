@@ -38,7 +38,7 @@ The `tree-sitter-aspx` crate. `build.rs` compiles the committed C sources with t
 
 ### [tools/](tools)
 
-Node scripts that CI and contributors run: `node-kinds.mjs` (node-kind snapshot), `fixture-check.mjs` and `corpus-check.mjs` (parse checks, the latter decoding UTF-16 pages), `fixture-leak-grep.mjs` (rejects connection-string shapes), `package-check.mjs` (published package contents), and `ci-policy.mjs` and `release-policy.mjs` with their tests (what CI must run and which release tags are valid).
+Node scripts that CI and contributors run: `node-kinds.mjs` (node-kind snapshot), `fixture-check.mjs` and `corpus-check.mjs` (parse checks, the latter decoding UTF-16 pages through `web-forms-encoding.mjs`), `fixture-leak-grep.mjs` (rejects connection-string shapes), `package-check.mjs` (published package contents), and `ci-policy.mjs` and `release-policy.mjs` with their tests (what CI must run and which release tags are valid).
 
 ## External systems and data flow
 

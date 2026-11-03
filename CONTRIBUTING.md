@@ -39,7 +39,7 @@ cargo clippy --workspace --all-targets --all-features -- -D warnings
 cargo test
 ```
 
-- `test/corpus/` holds per-construct tree assertions. `test/fixtures/` holds larger synthetic pages checked for `ERROR`, `MISSING`, and zero-width nodes.
+- `test/corpus/` holds per-construct tree assertions. `test/highlight/` holds pages whose `<%-- ^ capture --%>` comments assert `queries/highlights.scm` captures, which `tree-sitter test` also runs. `test/fixtures/` holds larger synthetic pages checked for `ERROR`, `MISSING`, and zero-width nodes. The injection query is tested from the Rust binding (`cargo test`).
 - `node tools/corpus-check.mjs <directory>` decodes UTF-8 BOM and UTF-16 files and applies the same check to a local Web Forms tree. Do not commit pages copied from a private application; fixtures stay synthetic.
 - `npm run lint` and `npm run format:check` cover `grammar.js`, `tools/*.mjs`, and `bindings/node/*.js`; `npm run format` applies formatting. The generated parser under `src/` is excluded. `oxlint` and `oxfmt` are devDependencies, configured by `.oxlintrc.json` and `.oxfmtrc.json`.
 - CI also runs `npm test`, which builds the native Node addon and needs a C/C++ toolchain, plus the Node binding on Windows when binding files change.
