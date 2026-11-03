@@ -6,7 +6,7 @@ The grammar is written once in `grammar.js`. The tree-sitter CLI generates a C p
 
 ## What tree-sitter-aspx is not
 
-- It is not an HTML validator. Tags are parsed structurally: the scanner keeps a stack of open elements, implies the end tags HTML lets a page omit, closes everything still open at the end of the file, and lets an end tag whose name matches nothing close the innermost element.
+- It is not an HTML validator. Tags are parsed structurally: the scanner keeps a stack of open elements, implies the end tags HTML lets a page omit, closes everything still open at the end of the file, and leaves an end tag whose name matches no open element in place without closing anything.
 - It is not a C# or VB.NET parser. Code inside a page is exposed as opaque `c_sharp_code` and `vb_code` ranges for a host to inject a real grammar into.
 - It does not cover Classic ASP, Razor, or code-behind files (`.aspx.cs`, `.aspx.vb`).
 

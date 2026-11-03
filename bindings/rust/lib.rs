@@ -94,6 +94,34 @@ mod tests {
         assert_eq!(comment.start_position().row, 1);
         assert_eq!(comment.start_position().column, 0);
     }
+
+    /// Nesting deeper than the scanner keeps names for, or names too long to
+    /// fit its serialized state, still pairs every end tag with its own start
+    /// tag: the document is one outermost element with no stray end tags.
+    #[test]
+    fn test_deep_nesting_pairs_end_tags() {
+        let mut parser = tree_sitter::Parser::new();
+        parser.set_language(&LANGUAGE.into()).unwrap();
+        for (name, depth) in [("div", 70), ("asp:ContentPlaceHolderXXXXXXXXX", 40)] {
+            let page = format!(
+                "{}x{}",
+                format!("<{name}>").repeat(depth),
+                format!("</{name}>").repeat(depth)
+            );
+            let tree = parser.parse(&page, None).unwrap();
+            assert!(!tree.root_node().has_error(), "{name}");
+            let document = tree.root_node().child(0).unwrap();
+            assert_eq!(document.named_child_count(), 1, "{name}");
+            let mut element = document.named_child(0).unwrap();
+            for _ in 1..depth {
+                let mut cursor = element.walk();
+                let children: Vec<_> = element.named_children(&mut cursor).collect();
+                assert_eq!(element.kind(), "element", "{name}");
+                assert_eq!(children.last().unwrap().kind(), "end_tag", "{name}");
+                element = children[1];
+            }
+        }
+    }
 }
 
 /// Checks `queries/injections.scm` against small pages: which ranges are

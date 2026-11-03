@@ -78,6 +78,7 @@ export default grammar({
     $._end_tag_name,
     $._implicit_end_tag,
     $._self_closing_delimiter,
+    $._stray_end_tag_name,
   ],
 
   rules: {
@@ -116,6 +117,7 @@ export default grammar({
         $.doctype,
         $.cdata_section,
         $.processing_instruction,
+        alias($.stray_end_tag, $.end_tag),
         $.text,
       ),
 
@@ -322,8 +324,7 @@ export default grammar({
     // `p`, `td`, `option`, and the rest), where the scanner finds it implied:
     // at a sibling or other start tag that closes it, at an ancestor's end
     // tag, or at the end of the file.
-    element: ($) =>
-      seq($.start_tag, repeat($._content), choice($.end_tag, $._implicit_end_tag)),
+    element: ($) => seq($.start_tag, repeat($._content), choice($.end_tag, $._implicit_end_tag)),
 
     start_tag: ($) => seq('<', field('name', $._tag_name), repeat($._tag_item), '>'),
 
@@ -349,6 +350,10 @@ export default grammar({
         ),
         '>',
       ),
+
+    // An end tag that names no open element closes nothing, as a browser
+    // treats it, so `<p><table></table></p>` keeps its parent open.
+    stray_end_tag: ($) => seq('</', field('name', alias($._stray_end_tag_name, $.tag_name)), '>'),
 
     doctype: ($) => seq($.doctype_token, optional(alias(/[^>]+/, $.doctype_declaration)), '>'),
 

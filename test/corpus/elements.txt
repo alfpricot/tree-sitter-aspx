@@ -307,7 +307,7 @@ open elements close at the end of the file
         (text)))))
 
 ================================================================================
-end tag for an outer element closes inner ones and mismatched end tags still close
+end tag for an outer element closes inner ones and a stray end tag closes nothing
 ================================================================================
 
 <div><span><b>x</div>
@@ -342,3 +342,123 @@ end tag for an outer element closes inner ones and mismatched end tags still clo
       (text)
       (end_tag
         (tag_name)))))
+
+================================================================================
+a stray end tag after an implied close keeps the parent open
+================================================================================
+
+<div><p><table><tr><td>x</td></tr></table></p></div>
+
+---
+
+(source_file
+  (document
+    (element
+      (start_tag
+        (tag_name))
+      (element
+        (start_tag
+          (tag_name)))
+      (element
+        (start_tag
+          (tag_name))
+        (element
+          (start_tag
+            (tag_name))
+          (element
+            (start_tag
+              (tag_name))
+            (text)
+            (end_tag
+              (tag_name)))
+          (end_tag
+            (tag_name)))
+        (end_tag
+          (tag_name)))
+      (end_tag
+        (tag_name))
+      (end_tag
+        (tag_name)))))
+
+================================================================================
+items and cells close through inner paragraphs and inline elements
+================================================================================
+
+<ul><li><p>One<li><span>Two</ul>
+<table><tr><td><p>a<td>b</table>
+<p>x<li>y
+
+---
+
+(source_file
+  (document
+    (element
+      (start_tag
+        (tag_name))
+      (element
+        (start_tag
+          (tag_name))
+        (element
+          (start_tag
+            (tag_name))
+          (text)))
+      (element
+        (start_tag
+          (tag_name))
+        (element
+          (start_tag
+            (tag_name))
+          (text)))
+      (end_tag
+        (tag_name)))
+    (element
+      (start_tag
+        (tag_name))
+      (element
+        (start_tag
+          (tag_name))
+        (element
+          (start_tag
+            (tag_name))
+          (element
+            (start_tag
+              (tag_name))
+            (text)))
+        (element
+          (start_tag
+            (tag_name))
+          (text)))
+      (end_tag
+        (tag_name)))
+    (element
+      (start_tag
+        (tag_name))
+      (text))
+    (element
+      (start_tag
+        (tag_name))
+      (text))))
+
+================================================================================
+whitespace inside end tags
+================================================================================
+
+<ul><li>a</ ul><p>b
+
+---
+
+(source_file
+  (document
+    (element
+      (start_tag
+        (tag_name))
+      (element
+        (start_tag
+          (tag_name))
+        (text))
+      (end_tag
+        (tag_name)))
+    (element
+      (start_tag
+        (tag_name))
+      (text))))

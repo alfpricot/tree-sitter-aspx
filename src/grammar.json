@@ -152,6 +152,15 @@
           "name": "processing_instruction"
         },
         {
+          "type": "ALIAS",
+          "content": {
+            "type": "SYMBOL",
+            "name": "stray_end_tag"
+          },
+          "named": true,
+          "value": "end_tag"
+        },
+        {
           "type": "SYMBOL",
           "name": "text"
         }
@@ -1536,6 +1545,32 @@
         }
       ]
     },
+    "stray_end_tag": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "STRING",
+          "value": "</"
+        },
+        {
+          "type": "FIELD",
+          "name": "name",
+          "content": {
+            "type": "ALIAS",
+            "content": {
+              "type": "SYMBOL",
+              "name": "_stray_end_tag_name"
+            },
+            "named": true,
+            "value": "tag_name"
+          }
+        },
+        {
+          "type": "STRING",
+          "value": ">"
+        }
+      ]
+    },
     "doctype": {
       "type": "SEQ",
       "members": [
@@ -1770,6 +1805,10 @@
     {
       "type": "SYMBOL",
       "name": "_self_closing_delimiter"
+    },
+    {
+      "type": "SYMBOL",
+      "name": "_stray_end_tag_name"
     }
   ],
   "inline": [],
