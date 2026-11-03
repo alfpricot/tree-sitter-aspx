@@ -103,6 +103,8 @@ export default grammar({
         $.self_closing_element,
         $.element,
         $.doctype,
+        $.cdata_section,
+        $.processing_instruction,
         $.text,
       ),
 
@@ -233,15 +235,27 @@ export default grammar({
     expression_builder: ($) =>
       seq('<%$', optional(alias($.expression_text, $.expression_value)), '%>'),
 
+    // Script and style bodies are raw text up to their end tag, except that
+    // nuggets, server comments, and directives inside them are still parsed. A body
+    // split by a nugget is several code or style_text chunks; the injection
+    // query combines them.
     script_element: ($) =>
       seq(
         alias($.script_start_tag, $.start_tag),
-        optional(choice(alias($._script_csharp, $.c_sharp_code), alias($._script_vb, $.vb_code))),
+        repeat(
+          choice(
+            alias($._script_csharp, $.c_sharp_code),
+            alias($._script_vb, $.vb_code),
+            $._nugget,
+            $.server_comment,
+            $.directive,
+          ),
+        ),
         alias($.script_end_tag, $.end_tag),
       ),
 
     script_start_tag: ($) =>
-      seq('<', field('name', alias($.script_tag_name, $.tag_name)), repeat($.attribute), '>'),
+      seq('<', field('name', alias($.script_tag_name, $.tag_name)), repeat($._tag_item), '>'),
 
     script_end_tag: ($) => seq('</', field('name', alias($.script_tag_name, $.tag_name)), '>'),
 
@@ -250,12 +264,12 @@ export default grammar({
     style_element: ($) =>
       seq(
         alias($.style_start_tag, $.start_tag),
-        optional($.style_text),
+        repeat(choice($.style_text, $._nugget, $.server_comment, $.directive)),
         alias($.style_end_tag, $.end_tag),
       ),
 
     style_start_tag: ($) =>
-      seq('<', field('name', alias($.style_tag_name, $.tag_name)), repeat($.attribute), '>'),
+      seq('<', field('name', alias($.style_tag_name, $.tag_name)), repeat($._tag_item), '>'),
 
     style_end_tag: ($) => seq('</', field('name', alias($.style_tag_name, $.tag_name)), '>'),
 
@@ -265,17 +279,36 @@ export default grammar({
       seq(
         '<',
         field('name', alias($.void_tag_name, $.tag_name)),
-        repeat($.attribute),
+        repeat($._tag_item),
         choice('/>', '>'),
       ),
 
     void_tag_name: (_) => choice(...VOID_TAGS.map((name) => reserved(name))),
 
-    self_closing_element: ($) => seq('<', field('name', $.tag_name), repeat($.attribute), '/>'),
+    // `<script src="..." />` and `<style />` close themselves in XHTML-era
+    // pages instead of opening a raw-text body.
+    self_closing_element: ($) =>
+      seq(
+        '<',
+        field(
+          'name',
+          choice(
+            $.tag_name,
+            alias($.script_tag_name, $.tag_name),
+            alias($.style_tag_name, $.tag_name),
+          ),
+        ),
+        repeat($._tag_item),
+        '/>',
+      ),
 
     element: ($) => seq($.start_tag, repeat($._content), $.end_tag),
 
-    start_tag: ($) => seq('<', field('name', $.tag_name), repeat($.attribute), '>'),
+    start_tag: ($) => seq('<', field('name', $.tag_name), repeat($._tag_item), '>'),
+
+    // A nugget or server comment can stand in for an attribute, as in
+    // `<option value="1" <%= selected ? "selected" : "" %>>`.
+    _tag_item: ($) => choice($.attribute, $._nugget, $.server_comment),
 
     end_tag: ($) =>
       seq(
@@ -297,6 +330,40 @@ export default grammar({
     doctype: ($) => seq($.doctype_token, optional(alias(/[^>]+/, $.doctype_declaration)), '>'),
 
     doctype_token: (_) => token(prec(RESERVED, /<![Dd][Oo][Cc][Tt][Yy][Pp][Ee]/)),
+
+    // `<![CDATA[ ... ]]>` and `<?xml ... ?>` appear in XHTML-era pages and
+    // .asmx files. ASP.NET still runs nuggets inside them, as in an RSS feed's
+    // `<![CDATA[<%# Eval("Body") %>]]>`, so nuggets stay real nodes and the
+    // rest is text.
+    cdata_section: ($) =>
+      seq(
+        '<![CDATA[',
+        repeat(
+          choice(
+            $._nugget,
+            $.server_comment,
+            alias(/[^\]<]+/, $.text),
+            alias(']', $.text),
+            alias('<', $.text),
+          ),
+        ),
+        ']]>',
+      ),
+
+    processing_instruction: ($) =>
+      seq(
+        '<?',
+        repeat(
+          choice(
+            $._nugget,
+            $.server_comment,
+            alias(/[^?<]+/, $.text),
+            alias('?', $.text),
+            alias('<', $.text),
+          ),
+        ),
+        '?>',
+      ),
 
     text: (_) => /[^<\s][^<]*/,
   },

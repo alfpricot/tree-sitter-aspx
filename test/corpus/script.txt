@@ -63,3 +63,145 @@ server script follows the page language
       (vb_code)
       (end_tag
         (tag_name)))))
+
+================================================================================
+nuggets inside script and style bodies
+================================================================================
+
+<script type="text/javascript">
+  var id = '<%= Ctl.ClientID %>';
+  <%-- hidden --%>
+</script>
+<style>
+  .a { color: <%: Color %>; }
+</style>
+
+---
+
+(source_file
+  (document
+    (script_element
+      (start_tag
+        (tag_name)
+        (attribute
+          (attribute_name)
+          (quoted_attribute_value
+            (attribute_value))))
+      (c_sharp_code)
+      (output_expression
+        (c_sharp_code))
+      (c_sharp_code)
+      (server_comment
+        (server_comment_text))
+      (c_sharp_code)
+      (end_tag
+        (tag_name)))
+    (style_element
+      (start_tag
+        (tag_name))
+      (style_text)
+      (encoded_expression
+        (c_sharp_code))
+      (style_text)
+      (end_tag
+        (tag_name)))))
+
+================================================================================
+script body that starts with a nugget
+================================================================================
+
+<script><% Response.Write("x"); %></script>
+
+---
+
+(source_file
+  (document
+    (script_element
+      (start_tag
+        (tag_name))
+      (statement_block
+        (c_sharp_code))
+      (end_tag
+        (tag_name)))))
+
+================================================================================
+self-closing script and style tags
+================================================================================
+
+<script src="a.js" />
+<style />
+<p>after</p>
+
+---
+
+(source_file
+  (document
+    (self_closing_element
+      (tag_name)
+      (attribute
+        (attribute_name)
+        (quoted_attribute_value
+          (attribute_value))))
+    (self_closing_element
+      (tag_name))
+    (element
+      (start_tag
+        (tag_name))
+      (text)
+      (end_tag
+        (tag_name)))))
+
+================================================================================
+unclosed nugget opener inside a server script is code
+================================================================================
+
+<script runat="server">
+  string open = "<%";
+</script>
+<p>after</p>
+
+---
+
+(source_file
+  (document
+    (script_element
+      (start_tag
+        (tag_name)
+        (attribute
+          (attribute_name)
+          (quoted_attribute_value
+            (attribute_value))))
+      (c_sharp_code)
+      (c_sharp_code)
+      (end_tag
+        (tag_name)))
+    (element
+      (start_tag
+        (tag_name))
+      (text)
+      (end_tag
+        (tag_name)))))
+
+================================================================================
+directive inside a script body
+================================================================================
+
+<script>a<%@ Import Namespace="System.Data" %>b</script>
+
+---
+
+(source_file
+  (document
+    (script_element
+      (start_tag
+        (tag_name))
+      (c_sharp_code)
+      (directive
+        (directive_name)
+        (attribute
+          (attribute_name)
+          (quoted_attribute_value
+            (attribute_value))))
+      (c_sharp_code)
+      (end_tag
+        (tag_name)))))

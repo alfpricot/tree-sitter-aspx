@@ -85,3 +85,94 @@ text inside a server control
       (text)
       (end_tag
         (tag_name)))))
+
+================================================================================
+nuggets and server comments in a tag
+================================================================================
+
+<option value="1" <%= sel ? "selected" : "" %>>One</option>
+<input type="checkbox" <% if (on) { %>checked<% } %> <%-- note --%> />
+
+---
+
+(source_file
+  (document
+    (element
+      (start_tag
+        (tag_name)
+        (attribute
+          (attribute_name)
+          (quoted_attribute_value
+            (attribute_value)))
+        (output_expression
+          (c_sharp_code)))
+      (text)
+      (end_tag
+        (tag_name)))
+    (void_element
+      (tag_name)
+      (attribute
+        (attribute_name)
+        (quoted_attribute_value
+          (attribute_value)))
+      (statement_block
+        (c_sharp_code))
+      (attribute
+        (attribute_name))
+      (statement_block
+        (c_sharp_code))
+      (server_comment
+        (server_comment_text)))))
+
+================================================================================
+xml declaration and cdata section
+================================================================================
+
+<?xml version="1.0" encoding="utf-8"?>
+<data><![CDATA[ a ] b ]] c <x> ]]></data>
+
+---
+
+(source_file
+  (document
+    (processing_instruction
+      (text))
+    (element
+      (start_tag
+        (tag_name))
+      (cdata_section
+        (text)
+        (text)
+        (text)
+        (text)
+        (text)
+        (text)
+        (text)
+        (text))
+      (end_tag
+        (tag_name)))))
+
+================================================================================
+nuggets inside cdata and an xml declaration
+================================================================================
+
+<?xml version="1.0" encoding="<%= Enc %>"?>
+<rss><![CDATA[<%# Eval("Body") %>]]></rss>
+
+---
+
+(source_file
+  (document
+    (processing_instruction
+      (text)
+      (output_expression
+        (c_sharp_code))
+      (text))
+    (element
+      (start_tag
+        (tag_name))
+      (cdata_section
+        (binding_expression
+          (c_sharp_code)))
+      (end_tag
+        (tag_name)))))

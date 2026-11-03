@@ -7,6 +7,8 @@
 (language_value) @type
 (doctype_token) @keyword
 (doctype_declaration) @string
+(processing_instruction) @keyword
+(cdata_section) @string
 
 (server_comment) @comment
 (server_comment_text) @comment
