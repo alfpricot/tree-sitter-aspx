@@ -139,9 +139,9 @@ export default grammar({
     web_service_name: (_) => reserved('WebService'),
 
     // `Language` is its own attribute so the value is a language_value node
-    // and the scanner can record C# vs VB for later code tokens. Only
-    // directives set the page language; on an element such as
-    // `<script language="VB">` it is an ordinary attribute.
+    // and the scanner can record C# vs VB for later code tokens. On an
+    // element it is an ordinary attribute; the scanner reads a server
+    // script's `language` itself, before the attributes are parsed.
     language_attribute: ($) =>
       seq(
         field('name', alias($.language_name, $.attribute_name)),

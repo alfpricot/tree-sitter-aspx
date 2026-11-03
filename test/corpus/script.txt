@@ -303,3 +303,38 @@ a client script's language does not change the page language
         (tag_name)))
     (statement_block
       (c_sharp_code))))
+
+================================================================================
+nuggets and server comments in a script start tag are skipped
+================================================================================
+
+<script <%-- note --%> id="<%= "s" %>" runat="server" language="VB">x</script>
+<% Dim y %>
+
+---
+
+(source_file
+  (document
+    (script_element
+      (start_tag
+        (tag_name)
+        (server_comment
+          (server_comment_text))
+        (attribute
+          (attribute_name)
+          (quoted_attribute_value
+            (output_expression
+              (vb_code))))
+        (attribute
+          (attribute_name)
+          (quoted_attribute_value
+            (attribute_value)))
+        (attribute
+          (attribute_name)
+          (quoted_attribute_value
+            (attribute_value))))
+      (vb_code)
+      (end_tag
+        (tag_name)))
+    (statement_block
+      (vb_code))))
