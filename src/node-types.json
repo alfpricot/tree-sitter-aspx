@@ -422,7 +422,7 @@
       },
       "value": {
         "multiple": false,
-        "required": true,
+        "required": false,
         "types": [
           {
             "type": "language_value",
@@ -539,10 +539,6 @@
         {
           "type": "attribute",
           "named": true
-        },
-        {
-          "type": "language_attribute",
-          "named": true
         }
       ]
     }
@@ -603,10 +599,6 @@
       "types": [
         {
           "type": "attribute",
-          "named": true
-        },
-        {
-          "type": "language_attribute",
           "named": true
         }
       ]
@@ -680,10 +672,6 @@
       "types": [
         {
           "type": "attribute",
-          "named": true
-        },
-        {
-          "type": "language_attribute",
           "named": true
         }
       ]
@@ -762,22 +750,6 @@
     "named": false
   },
   {
-    "type": "WEBHANDLER",
-    "named": false
-  },
-  {
-    "type": "WEBSERVICE",
-    "named": false
-  },
-  {
-    "type": "WebHandler",
-    "named": false
-  },
-  {
-    "type": "WebService",
-    "named": false
-  },
-  {
     "type": "attribute_name",
     "named": true
   },
@@ -828,13 +800,5 @@
   {
     "type": "vb_code",
     "named": true
-  },
-  {
-    "type": "webhandler",
-    "named": false
-  },
-  {
-    "type": "webservice",
-    "named": false
   }
 ]

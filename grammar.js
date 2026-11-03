@@ -106,30 +106,34 @@ export default grammar({
         $.text,
       ),
 
-    directive: ($) => seq('<%@', field('name', $.directive_name), repeat($._attribute), '%>'),
+    directive: ($) =>
+      seq('<%@', field('name', $.directive_name), repeat($._directive_attribute), '%>'),
 
     handler_directive: ($) =>
       seq(
         '<%@',
         field('name', alias(choice($.web_handler_name, $.web_service_name), $.directive_name)),
-        repeat($._attribute),
+        repeat($._directive_attribute),
         '%>',
       ),
 
     _name: (_) => /[A-Za-z_][A-Za-z0-9_.:-]*/,
     directive_name: ($) => $._name,
-    web_handler_name: (_) => choice('WebHandler', 'webhandler', 'WEBHANDLER'),
-    web_service_name: (_) => choice('WebService', 'webservice', 'WEBSERVICE'),
+    web_handler_name: (_) => reserved('WebHandler'),
+    web_service_name: (_) => reserved('WebService'),
 
     // `Language` is its own attribute so the value is a language_value node
-    // and the scanner can record C# vs VB for later code tokens.
+    // and the scanner can record C# vs VB for later code tokens. Only
+    // directives set the page language; on an element such as
+    // `<script language="VB">` it is an ordinary attribute.
     language_attribute: ($) =>
       seq(
         field('name', alias($.language_name, $.attribute_name)),
         '=',
         choice(
-          seq('"', field('value', $._language_value), '"'),
-          seq("'", field('value', $._language_value), "'"),
+          seq('"', optional(field('value', $._language_value)), '"'),
+          seq("'", optional(field('value', $._language_value)), "'"),
+          field('value', $._language_value),
         ),
       ),
 
@@ -138,7 +142,7 @@ export default grammar({
     _language_value: ($) =>
       alias(choice($._lang_csharp, $._lang_vb, $._lang_other), $.language_value),
 
-    _attribute: ($) => choice($.language_attribute, $.attribute),
+    _directive_attribute: ($) => choice($.language_attribute, $.attribute),
 
     attribute: ($) =>
       seq(
@@ -185,7 +189,10 @@ export default grammar({
 
     unquoted_attribute_value: (_) => /[^"'=<>\s`]+/,
 
-    server_comment: ($) => seq('<%--', optional($.server_comment_text), '--%>'),
+    // Any run of two or more dashes before `%>` closes the comment, as in
+    // `<%-- note ---%>`; the scanner stops the text before that run.
+    server_comment: ($) =>
+      seq('<%--', optional($.server_comment_text), alias(token(/-*--%>/), '--%>')),
 
     // Nuggets inside an HTML comment still execute, so they stay real nodes.
     html_comment: ($) =>
@@ -234,7 +241,7 @@ export default grammar({
       ),
 
     script_start_tag: ($) =>
-      seq('<', field('name', alias($.script_tag_name, $.tag_name)), repeat($._attribute), '>'),
+      seq('<', field('name', alias($.script_tag_name, $.tag_name)), repeat($.attribute), '>'),
 
     script_end_tag: ($) => seq('</', field('name', alias($.script_tag_name, $.tag_name)), '>'),
 
@@ -248,7 +255,7 @@ export default grammar({
       ),
 
     style_start_tag: ($) =>
-      seq('<', field('name', alias($.style_tag_name, $.tag_name)), repeat($._attribute), '>'),
+      seq('<', field('name', alias($.style_tag_name, $.tag_name)), repeat($.attribute), '>'),
 
     style_end_tag: ($) => seq('</', field('name', alias($.style_tag_name, $.tag_name)), '>'),
 
@@ -258,17 +265,17 @@ export default grammar({
       seq(
         '<',
         field('name', alias($.void_tag_name, $.tag_name)),
-        repeat($._attribute),
+        repeat($.attribute),
         choice('/>', '>'),
       ),
 
     void_tag_name: (_) => choice(...VOID_TAGS.map((name) => reserved(name))),
 
-    self_closing_element: ($) => seq('<', field('name', $.tag_name), repeat($._attribute), '/>'),
+    self_closing_element: ($) => seq('<', field('name', $.tag_name), repeat($.attribute), '/>'),
 
     element: ($) => seq($.start_tag, repeat($._content), $.end_tag),
 
-    start_tag: ($) => seq('<', field('name', $.tag_name), repeat($._attribute), '>'),
+    start_tag: ($) => seq('<', field('name', $.tag_name), repeat($.attribute), '>'),
 
     end_tag: ($) =>
       seq(
