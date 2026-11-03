@@ -390,6 +390,7 @@ jobs:
         run: |
           set -euo pipefail
           # Every release tag carries the snapshot, so a missing file means
-          # the checkout is wrong; fail rather than publish a release
-          # without it.
+          # the checkout is wrong. The release already exists by this
+          # point; failing the job makes the missing asset visible, and a
+          # re-run after the fix only uploads it.
           gh release upload "$TAG" test/node-kinds.txt --clobber
