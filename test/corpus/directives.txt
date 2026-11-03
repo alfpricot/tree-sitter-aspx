@@ -231,3 +231,28 @@ malformed directive does not change the page language
       (attribute_value))
     (statement_block
       (c_sharp_code))))
+
+================================================================================
+long unrecognized language value is consumed whole
+================================================================================
+
+<%@ Page Language=AbcdefghijAbcdefghijAbcdefghijAbcdefghij %>
+<%@ Page Language="AbcdefghijAbcdefghijAbcdefghijAbcdefghij" %>
+<% int x; %>
+
+---
+
+(source_file
+  (document
+    (directive
+      (directive_name)
+      (language_attribute
+        (attribute_name)
+        (language_value)))
+    (directive
+      (directive_name)
+      (language_attribute
+        (attribute_name)
+        (language_value)))
+    (statement_block
+      (c_sharp_code))))

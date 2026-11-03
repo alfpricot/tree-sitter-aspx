@@ -53,9 +53,14 @@ static bool is_space(int32_t c) {
 void *tree_sitter_aspx_external_scanner_create(void) {
   // ts_malloc plus an explicit field set, not ts_calloc: the compiler can
   // lower calloc to memset, which the Wasm parser target does not provide.
-  // ts_malloc goes through tree-sitter's allocator, which aborts on failure.
+  // ts_malloc is plain malloc unless the host build opts into tree-sitter's
+  // allocator, and the Wasm target has no abort(), so a failed allocation
+  // returns NULL. The other entry points then do nothing: the parse goes on
+  // without external tokens instead of writing through a null pointer.
   Scanner *scanner = ts_malloc(sizeof(Scanner));
-  scanner->language = LANGUAGE_CSHARP;
+  if (scanner != NULL) {
+    scanner->language = LANGUAGE_CSHARP;
+  }
   return scanner;
 }
 
@@ -65,12 +70,18 @@ void tree_sitter_aspx_external_scanner_destroy(void *payload) {
 
 unsigned tree_sitter_aspx_external_scanner_serialize(void *payload, char *buffer) {
   Scanner *scanner = payload;
+  if (scanner == NULL) {
+    return 0;
+  }
   buffer[0] = (char)scanner->language;
   return 1;
 }
 
 void tree_sitter_aspx_external_scanner_deserialize(void *payload, const char *buffer, unsigned length) {
   Scanner *scanner = payload;
+  if (scanner == NULL) {
+    return;
+  }
   scanner->language = length > 0 ? (uint8_t)buffer[0] : LANGUAGE_CSHARP;
 }
 
@@ -189,9 +200,12 @@ static bool scan_language(TSLexer *lexer, Scanner *scanner, const bool *valid_sy
   while (is_space(lexer->lookahead)) {
     lexer->advance(lexer, true);
   }
+  // Names longer than the buffer are still consumed whole; none of them is
+  // C# or VB, so they become LANG_OTHER.
   char buf[32];
   unsigned n = 0;
-  while (n + 1 < sizeof(buf)) {
+  bool truncated = false;
+  for (;;) {
     int32_t c = lexer->lookahead;
     // A `%` ends an unquoted value only when it starts the closing `%>`.
     if (c == '%') {
@@ -199,15 +213,16 @@ static bool scan_language(TSLexer *lexer, Scanner *scanner, const bool *valid_sy
       if (lexer->lookahead == '>') {
         break;
       }
-      buf[n++] = '%';
-      lexer->mark_end(lexer);
-      continue;
-    }
-    if (ends_language_value(c)) {
+    } else if (ends_language_value(c)) {
       break;
+    } else {
+      lexer->advance(lexer, false);
     }
-    buf[n++] = (char)ascii_lower(c);
-    lexer->advance(lexer, false);
+    if (n + 1 < sizeof(buf)) {
+      buf[n++] = (char)ascii_lower(c);
+    } else {
+      truncated = true;
+    }
     lexer->mark_end(lexer);
   }
   buf[n] = '\0';
@@ -216,7 +231,9 @@ static bool scan_language(TSLexer *lexer, Scanner *scanner, const bool *valid_sy
   }
 
   enum TokenType symbol = LANG_OTHER;
-  if (name_in(buf, CSHARP_NAMES, sizeof(CSHARP_NAMES) / sizeof(CSHARP_NAMES[0]))) {
+  if (truncated) {
+    // Too long to be any recognized name.
+  } else if (name_in(buf, CSHARP_NAMES, sizeof(CSHARP_NAMES) / sizeof(CSHARP_NAMES[0]))) {
     symbol = LANG_CSHARP;
   } else if (name_in(buf, VB_NAMES, sizeof(VB_NAMES) / sizeof(VB_NAMES[0]))) {
     symbol = LANG_VB;
@@ -252,6 +269,9 @@ static bool emit_code(TSLexer *lexer, Scanner *scanner, const bool *valid_symbol
 
 bool tree_sitter_aspx_external_scanner_scan(void *payload, TSLexer *lexer, const bool *valid_symbols) {
   Scanner *scanner = payload;
+  if (scanner == NULL) {
+    return false;
+  }
 
   // During error recovery every external token is valid at once. No real
   // parse state allows both a Language value and handler text, so that pair
