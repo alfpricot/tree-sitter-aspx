@@ -54,6 +54,18 @@
    (vb_code) @injection.content)
  (#set! injection.language "vb"))
 
+; Handler files (.ashx, .asmx) are a directive plus code. The code pieces
+; between any <script> elements and server comments form one document.
+((handler_code
+   (c_sharp_code) @injection.content)
+ (#set! injection.language "c_sharp")
+ (#set! injection.combined))
+
+((handler_code
+   (vb_code) @injection.content)
+ (#set! injection.language "vb")
+ (#set! injection.combined))
+
 ((script_element
    (start_tag) @_tag
    (c_sharp_code) @injection.content)

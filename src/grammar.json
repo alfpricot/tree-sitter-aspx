@@ -45,6 +45,10 @@
             "members": [
               {
                 "type": "SYMBOL",
+                "name": "directive"
+              },
+              {
+                "type": "SYMBOL",
                 "name": "server_comment"
               },
               {
@@ -52,16 +56,34 @@
                 "name": "script_element"
               },
               {
-                "type": "ALIAS",
-                "content": {
-                  "type": "SYMBOL",
-                  "name": "handler_text"
-                },
-                "named": true,
-                "value": "handler_code"
+                "type": "SYMBOL",
+                "name": "handler_code"
               }
             ]
           }
+        }
+      ]
+    },
+    "handler_code": {
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "ALIAS",
+          "content": {
+            "type": "SYMBOL",
+            "name": "_handler_csharp"
+          },
+          "named": true,
+          "value": "c_sharp_code"
+        },
+        {
+          "type": "ALIAS",
+          "content": {
+            "type": "SYMBOL",
+            "name": "_handler_vb"
+          },
+          "named": true,
+          "value": "vb_code"
         }
       ]
     },
@@ -1674,7 +1696,11 @@
     },
     {
       "type": "SYMBOL",
-      "name": "handler_text"
+      "name": "_handler_csharp"
+    },
+    {
+      "type": "SYMBOL",
+      "name": "_handler_vb"
     }
   ],
   "inline": [],
