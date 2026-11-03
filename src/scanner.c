@@ -164,6 +164,9 @@ static bool at_end_tag_name(TSLexer *lexer, const char *name) {
 // script), so the token end is moved to the end tag or EOF as the scan goes.
 static bool nugget_closes_in_body(TSLexer *lexer, const char *name) {
   lexer->advance(lexer, false);
+  // The `<%` itself is content when nothing closes it, even at the end of
+  // the file; a zero-width chunk would repeat forever.
+  lexer->mark_end(lexer);
   while (lexer->lookahead != 0) {
     if (lexer->lookahead == '%') {
       lexer->advance(lexer, false);

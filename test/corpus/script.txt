@@ -230,3 +230,18 @@ end tags in any casing with whitespace before the bracket
       (style_text)
       (end_tag
         (tag_name)))))
+
+================================================================================
+unclosed nugget opener at the end of a script body
+================================================================================
+
+<script>a<%
+
+---
+
+(source_file
+  (ERROR
+    (start_tag
+      (tag_name))
+    (c_sharp_code)
+    (c_sharp_code)))
