@@ -3,7 +3,8 @@
 // Three jobs the ordinary lexer cannot do:
 //
 //   * Code, comments, style, and handler bodies run until a terminator
-//     (`%>`, `--%>`, `</script>`, `</style>`, or EOF). Tree-sitter's
+//     (`%>`, `--%>`, `</script>`, `</style>`, or EOF). Script and style
+//     bodies also stop at `<%`, so nuggets inside them stay real nodes. Tree-sitter's
 //     regex dialect has no lookahead, so a regex cannot stop before that
 //     terminator without eating it.
 //   * The page `Language` value is recorded here. Later code tokens are
@@ -145,15 +146,19 @@ static bool match_ci(TSLexer *lexer, const char *lower) {
   return true;
 }
 
-// `</name` with optional whitespace before `>`. On a match the token end
-// stays where the caller marked it, before the `<`. Otherwise the consumed
-// characters become content.
+// Content runs until `</name` with optional whitespace before `>`, or until
+// a `<%` that opens a nugget or server comment inside the body. On a stop the
+// token end stays where the caller marked it, before the `<`. Otherwise the
+// consumed characters become content.
 static bool scan_until_end_tag(TSLexer *lexer, const char *name) {
   bool has_content = false;
   while (lexer->lookahead != 0) {
     if (lexer->lookahead == '<') {
       lexer->mark_end(lexer);
       lexer->advance(lexer, false);
+      if (lexer->lookahead == '%') {
+        return has_content;
+      }
       if (lexer->lookahead == '/') {
         lexer->advance(lexer, false);
         if (match_ci(lexer, name)) {

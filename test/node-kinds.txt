@@ -3,6 +3,7 @@ attribute_name
 attribute_value
 binding_expression
 c_sharp_code
+cdata_section
 comment_text
 directive
 directive_name
@@ -22,6 +23,7 @@ html_comment
 language_attribute
 language_value
 output_expression
+processing_instruction
 quoted_attribute_value
 script_element
 self_closing_element

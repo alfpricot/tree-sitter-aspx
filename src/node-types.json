@@ -115,6 +115,10 @@
           "named": true
         },
         {
+          "type": "cdata_section",
+          "named": true
+        },
+        {
           "type": "directive",
           "named": true
         },
@@ -144,6 +148,10 @@
         },
         {
           "type": "output_expression",
+          "named": true
+        },
+        {
+          "type": "processing_instruction",
           "named": true
         },
         {
@@ -190,6 +198,10 @@
           "named": true
         },
         {
+          "type": "cdata_section",
+          "named": true
+        },
+        {
           "type": "directive",
           "named": true
         },
@@ -219,6 +231,10 @@
         },
         {
           "type": "output_expression",
+          "named": true
+        },
+        {
+          "type": "processing_instruction",
           "named": true
         },
         {
@@ -499,7 +515,15 @@
       "required": true,
       "types": [
         {
+          "type": "binding_expression",
+          "named": true
+        },
+        {
           "type": "c_sharp_code",
+          "named": true
+        },
+        {
+          "type": "encoded_expression",
           "named": true
         },
         {
@@ -507,7 +531,23 @@
           "named": true
         },
         {
+          "type": "expression_builder",
+          "named": true
+        },
+        {
+          "type": "output_expression",
+          "named": true
+        },
+        {
+          "type": "server_comment",
+          "named": true
+        },
+        {
           "type": "start_tag",
+          "named": true
+        },
+        {
+          "type": "statement_block",
           "named": true
         },
         {
@@ -538,6 +578,30 @@
       "types": [
         {
           "type": "attribute",
+          "named": true
+        },
+        {
+          "type": "binding_expression",
+          "named": true
+        },
+        {
+          "type": "encoded_expression",
+          "named": true
+        },
+        {
+          "type": "expression_builder",
+          "named": true
+        },
+        {
+          "type": "output_expression",
+          "named": true
+        },
+        {
+          "type": "server_comment",
+          "named": true
+        },
+        {
+          "type": "statement_block",
           "named": true
         }
       ]
@@ -600,6 +664,30 @@
         {
           "type": "attribute",
           "named": true
+        },
+        {
+          "type": "binding_expression",
+          "named": true
+        },
+        {
+          "type": "encoded_expression",
+          "named": true
+        },
+        {
+          "type": "expression_builder",
+          "named": true
+        },
+        {
+          "type": "output_expression",
+          "named": true
+        },
+        {
+          "type": "server_comment",
+          "named": true
+        },
+        {
+          "type": "statement_block",
+          "named": true
         }
       ]
     }
@@ -632,11 +720,35 @@
       "required": true,
       "types": [
         {
+          "type": "binding_expression",
+          "named": true
+        },
+        {
+          "type": "encoded_expression",
+          "named": true
+        },
+        {
           "type": "end_tag",
           "named": true
         },
         {
+          "type": "expression_builder",
+          "named": true
+        },
+        {
+          "type": "output_expression",
+          "named": true
+        },
+        {
+          "type": "server_comment",
+          "named": true
+        },
+        {
           "type": "start_tag",
+          "named": true
+        },
+        {
+          "type": "statement_block",
           "named": true
         },
         {
@@ -672,6 +784,30 @@
       "types": [
         {
           "type": "attribute",
+          "named": true
+        },
+        {
+          "type": "binding_expression",
+          "named": true
+        },
+        {
+          "type": "encoded_expression",
+          "named": true
+        },
+        {
+          "type": "expression_builder",
+          "named": true
+        },
+        {
+          "type": "output_expression",
+          "named": true
+        },
+        {
+          "type": "server_comment",
+          "named": true
+        },
+        {
+          "type": "statement_block",
           "named": true
         }
       ]
@@ -762,6 +898,10 @@
     "named": true
   },
   {
+    "type": "cdata_section",
+    "named": true
+  },
+  {
     "type": "comment_text",
     "named": true
   },
@@ -783,6 +923,10 @@
   },
   {
     "type": "language_value",
+    "named": true
+  },
+  {
+    "type": "processing_instruction",
     "named": true
   },
   {

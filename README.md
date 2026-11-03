@@ -19,7 +19,7 @@ cargo add tree-sitter-aspx     # Rust
 
 ## Usage
 
-The grammar parses directives, server comments, HTML comments, code nuggets, `<script>` and `<style>` elements, and tags with attributes. It does not validate HTML. Void tags (`br`, `img`, `meta`, and the other HTML void elements) do not swallow the following markup. An end tag closes the nearest open element; the names are not required to match. `<script>` and `<style>` bodies are raw text, so `<` inside JavaScript or CSS is not a tag.
+The grammar parses directives, server comments, HTML comments, code nuggets, `<script>` and `<style>` elements, and tags with attributes. It does not validate HTML. Void tags (`br`, `img`, `meta`, and the other HTML void elements) do not swallow the following markup. An end tag closes the nearest open element; the names are not required to match. `<script>` and `<style>` bodies are raw text, so `<` inside JavaScript or CSS is not a tag, but a nugget or server comment inside a body is still parsed as one. Nuggets and server comments may also stand in for attributes in a tag, as in `<option <%= selected %>>`. `<![CDATA[ ]]>` sections, `<?xml ?>` declarations, and self-closing `<script ... />` and `<style />` tags parse as single nodes. Every non-void element needs an end tag: a page that leaves out an optional `</p>`, `</li>`, or `</td>` gets a `MISSING` end tag in the tree.
 
 The C# and VB.NET inside a page are exposed as `c_sharp_code` and `vb_code` nodes, with injection queries for editors. See [docs/EMBEDDED_CODE.md](docs/EMBEDDED_CODE.md).
 

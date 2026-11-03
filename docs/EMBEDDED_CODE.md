@@ -10,10 +10,10 @@ Code nuggets and server-script bodies are opaque ranges. The `Language` attribut
 | `statement_block` | `<% %>` |
 | `expression_builder` / `expression_value` | `<%$ %>`, not C# or VB |
 | `server_comment` | `<%-- --%>`, not code |
-| `c_sharp_code`, `vb_code` | The bytes inside a nugget or a `<script>` body |
+| `c_sharp_code`, `vb_code` | The bytes inside a nugget or a `<script>` body. A nugget inside the body splits it into several chunks |
 | `handler_code` | Everything after a `WebHandler` or `WebService` directive that is not a `<script>` element |
 
-`queries/injections.scm` maps those code nodes to `c_sharp` or `vb`. Statement blocks set `injection.combined`, so `<% if (ready) { %>` … `<% } %>` is one injected document and the markup between them is not part of it. Output, encoded, and binding nuggets are injected one by one. A `<script>` whose start tag has `runat="server"` keeps the page language. Any other `<script>` body is injected as JavaScript, even though the node is still `c_sharp_code` or `vb_code`. `<style>` bodies are injected as CSS.
+`queries/injections.scm` maps those code nodes to `c_sharp` or `vb`. Statement blocks set `injection.combined`, so `<% if (ready) { %>` … `<% } %>` is one injected document and the markup between them is not part of it. Output, encoded, and binding nuggets are injected one by one. A `<script>` whose start tag has `runat="server"` keeps the page language. Any other `<script>` body is injected as JavaScript, even though the node is still `c_sharp_code` or `vb_code`. `<style>` bodies are injected as CSS. A nugget inside a `<script>` or `<style>` body, such as `var id = '<%= Ctl.ClientID %>';`, is a real nugget node; the body chunks around it are combined into one injected script or stylesheet, and the nugget's own code is injected as C# or VB. Nuggets that stand in for attributes in a tag (`<option <%= selected %>>`) are injected the same way. The body scan stops at every `<%`, including one inside a server script's string literal.
 
 A consumer that counts executable code should count `c_sharp_code` and `vb_code` bytes, and should skip a `<script>` body whose start tag has no `runat="server"`. Markup, attribute text, style text, expression-builder text, and server comments are not executable code. Server comments are their own node kind.
 
