@@ -402,6 +402,8 @@ export default grammar({
         '?>',
       ),
 
-    text: (_) => /[^<\s][^<]*/,
+    // A `<` followed by whitespace starts no tag, as browsers and ASP.NET's
+    // own tag pattern read it, so `a < b` is text rather than an element.
+    text: (_) => token(choice(/[^<\s][^<]*/, /<\s[^<]*/)),
   },
 });

@@ -1752,8 +1752,20 @@
       ]
     },
     "text": {
-      "type": "PATTERN",
-      "value": "[^<\\s][^<]*"
+      "type": "TOKEN",
+      "content": {
+        "type": "CHOICE",
+        "members": [
+          {
+            "type": "PATTERN",
+            "value": "[^<\\s][^<]*"
+          },
+          {
+            "type": "PATTERN",
+            "value": "<\\s[^<]*"
+          }
+        ]
+      }
     }
   },
   "extras": [
