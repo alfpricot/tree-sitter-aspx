@@ -1,18 +1,22 @@
 // External scanner for tree-sitter-aspx.
 //
-// Three jobs the ordinary lexer cannot do:
+// Jobs the ordinary lexer cannot do:
 //
 //   * Code, comments, style, and handler bodies run until a terminator
 //     (`%>`, `--%>`, `</script>`, `</style>`, or EOF). Script and style
-//     bodies also stop at `<%`, so nuggets inside them stay real nodes. Tree-sitter's
-//     regex dialect has no lookahead, so a regex cannot stop before that
-//     terminator without eating it.
+//     bodies also stop at `<%`, so nuggets inside them stay real nodes.
+//     Tree-sitter's regex dialect has no lookahead, so a regex cannot stop
+//     before that terminator without eating it.
 //   * The page `Language` value is recorded here. Later code tokens are
 //     emitted as C# or VB so the injection query can name the grammar
 //     without finding the directive again. The byte is serialized because
 //     an incremental reparse may resume after the directive.
 //   * A `Language` value that is neither C# nor VB is still consumed, and
 //     the recorded language stays unchanged.
+//   * Start and end tag names pass through here so the scanner can keep a
+//     stack of open elements and emit a zero-width implied end tag where
+//     HTML lets a page leave one out. The stack is serialized with the
+//     language.
 #include "tree_sitter/alloc.h"
 #include "tree_sitter/parser.h"
 
@@ -31,6 +35,10 @@ enum TokenType {
   EXPRESSION_TEXT,
   HANDLER_CSHARP,
   HANDLER_VB,
+  START_TAG_NAME,
+  END_TAG_NAME,
+  IMPLICIT_END_TAG,
+  SELF_CLOSING_DELIMITER,
 };
 
 enum Language {
@@ -38,8 +46,16 @@ enum Language {
   LANGUAGE_VB = 1,
 };
 
+// Open elements, innermost last, as lowercase names. Names longer than
+// TAG_NAME_MAX are cut to that length; elements nested deeper than
+// TAG_STACK_MAX are counted but not named, and never match an end tag.
+#define TAG_STACK_MAX 64
+#define TAG_NAME_MAX 31
+
 typedef struct {
   uint8_t language;
+  uint16_t depth;
+  char names[TAG_STACK_MAX][TAG_NAME_MAX + 1];
 } Scanner;
 
 // ASCII-only lowercase. The Wasm parser target provides no libc ctype
@@ -62,6 +78,7 @@ void *tree_sitter_aspx_external_scanner_create(void) {
   Scanner *scanner = ts_malloc(sizeof(Scanner));
   if (scanner != NULL) {
     scanner->language = LANGUAGE_CSHARP;
+    scanner->depth = 0;
   }
   return scanner;
 }
@@ -70,13 +87,34 @@ void tree_sitter_aspx_external_scanner_destroy(void *payload) {
   ts_free(payload);
 }
 
+// Layout: language, depth (two bytes, little-endian), the number of names
+// stored, then each stored name as a length byte and its characters,
+// outermost first. Names that do not fit are restored as unknown.
 unsigned tree_sitter_aspx_external_scanner_serialize(void *payload, char *buffer) {
   Scanner *scanner = payload;
   if (scanner == NULL) {
     return 0;
   }
   buffer[0] = (char)scanner->language;
-  return 1;
+  buffer[1] = (char)(scanner->depth & 0xff);
+  buffer[2] = (char)(scanner->depth >> 8);
+  unsigned size = 4;
+  unsigned stored = 0;
+  unsigned named = scanner->depth < TAG_STACK_MAX ? scanner->depth : TAG_STACK_MAX;
+  while (stored < named && stored < 255) {
+    const char *name = scanner->names[stored];
+    unsigned length = (unsigned)strlen(name);
+    if (size + 1 + length > TREE_SITTER_SERIALIZATION_BUFFER_SIZE) {
+      break;
+    }
+    buffer[size++] = (char)length;
+    for (unsigned i = 0; i < length; i++) {
+      buffer[size++] = name[i];
+    }
+    stored++;
+  }
+  buffer[3] = (char)stored;
+  return size;
 }
 
 void tree_sitter_aspx_external_scanner_deserialize(void *payload, const char *buffer, unsigned length) {
@@ -84,7 +122,30 @@ void tree_sitter_aspx_external_scanner_deserialize(void *payload, const char *bu
   if (scanner == NULL) {
     return;
   }
-  scanner->language = length > 0 ? (uint8_t)buffer[0] : LANGUAGE_CSHARP;
+  scanner->language = LANGUAGE_CSHARP;
+  scanner->depth = 0;
+  if (length == 0) {
+    return;
+  }
+  scanner->language = (uint8_t)buffer[0];
+  if (length < 4) {
+    return;
+  }
+  scanner->depth = (uint16_t)((uint8_t)buffer[1] | ((uint8_t)buffer[2] << 8));
+  unsigned stored = (uint8_t)buffer[3];
+  unsigned named = scanner->depth < TAG_STACK_MAX ? scanner->depth : TAG_STACK_MAX;
+  unsigned offset = 4;
+  for (unsigned i = 0; i < named; i++) {
+    unsigned n = 0;
+    if (i < stored && offset < length) {
+      unsigned name_length = (uint8_t)buffer[offset++];
+      while (n < name_length && n < TAG_NAME_MAX && offset < length) {
+        scanner->names[i][n++] = buffer[offset++];
+      }
+      offset += name_length - n;
+    }
+    scanner->names[i][n] = '\0';
+  }
 }
 
 static bool scan_until_percent_gt(TSLexer *lexer) {
@@ -438,6 +499,208 @@ static bool emit_code(TSLexer *lexer, Scanner *scanner, const bool *valid_symbol
   return true;
 }
 
+// ---- Open-element stack -------------------------------------------------
+
+static bool is_name_start(int32_t c) {
+  return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || c == '_';
+}
+
+static bool is_name_char(int32_t c) {
+  return is_name_start(c) || (c >= '0' && c <= '9') || c == '.' || c == ':' || c == '-';
+}
+
+// Reads a tag name (the grammar's `_name` pattern) as lowercase into `out`,
+// keeping the first TAG_NAME_MAX characters. Returns false if none is there.
+static bool read_tag_name(TSLexer *lexer, char *out) {
+  if (!is_name_start(lexer->lookahead)) {
+    return false;
+  }
+  unsigned n = 0;
+  while (is_name_char(lexer->lookahead)) {
+    if (n < TAG_NAME_MAX) {
+      out[n++] = (char)ascii_lower(lexer->lookahead);
+    }
+    lexer->advance(lexer, false);
+  }
+  out[n] = '\0';
+  return true;
+}
+
+#define COUNT(array) (sizeof(array) / sizeof((array)[0]))
+
+// Names the grammar lexes itself as reserved words: void elements never hold
+// content, and script and style bodies are raw text with their own end tags.
+static const char *const RESERVED_TAGS[] = {
+    "area", "base", "br", "col", "embed", "hr", "img", "input",
+    "link", "meta", "param", "source", "track", "wbr", "script", "style",
+};
+
+// Start tags that close an open `p`, per the HTML parsing rules.
+static const char *const CLOSES_P[] = {
+    "address", "article", "aside", "blockquote", "details", "dialog", "div",
+    "dl", "fieldset", "figcaption", "figure", "footer", "form", "h1", "h2",
+    "h3", "h4", "h5", "h6", "header", "hgroup", "hr", "main", "menu", "nav",
+    "ol", "p", "pre", "section", "table", "ul",
+};
+
+static const char *const DT_DD[] = {"dt", "dd"};
+static const char *const RT_RP[] = {"rt", "rp"};
+static const char *const OPTION_CLOSERS[] = {"option", "optgroup"};
+static const char *const ROW_CLOSERS[] = {"tr", "tbody", "tfoot", "thead"};
+static const char *const CELL_CLOSERS[] = {"td", "th", "tr", "tbody", "tfoot", "thead"};
+static const char *const SECTION_CLOSERS[] = {"tbody", "tfoot"};
+
+// Whether a start tag named `next` implies the end of the open element `open`.
+static bool start_tag_closes(const char *open, const char *next) {
+  if (strcmp(open, "p") == 0) {
+    return name_in(next, CLOSES_P, COUNT(CLOSES_P));
+  }
+  if (strcmp(open, "li") == 0) {
+    return strcmp(next, "li") == 0;
+  }
+  if (strcmp(open, "dt") == 0 || strcmp(open, "dd") == 0) {
+    return name_in(next, DT_DD, COUNT(DT_DD));
+  }
+  if (strcmp(open, "rt") == 0 || strcmp(open, "rp") == 0) {
+    return name_in(next, RT_RP, COUNT(RT_RP));
+  }
+  if (strcmp(open, "option") == 0) {
+    return name_in(next, OPTION_CLOSERS, COUNT(OPTION_CLOSERS));
+  }
+  if (strcmp(open, "optgroup") == 0) {
+    return strcmp(next, "optgroup") == 0;
+  }
+  if (strcmp(open, "tr") == 0) {
+    return name_in(next, ROW_CLOSERS, COUNT(ROW_CLOSERS));
+  }
+  if (strcmp(open, "td") == 0 || strcmp(open, "th") == 0) {
+    return name_in(next, CELL_CLOSERS, COUNT(CELL_CLOSERS));
+  }
+  if (strcmp(open, "thead") == 0 || strcmp(open, "tbody") == 0) {
+    return name_in(next, SECTION_CLOSERS, COUNT(SECTION_CLOSERS));
+  }
+  return false;
+}
+
+static const char *top_name(Scanner *scanner) {
+  if (scanner->depth == 0 || scanner->depth > TAG_STACK_MAX) {
+    return "";
+  }
+  return scanner->names[scanner->depth - 1];
+}
+
+static void push_tag(Scanner *scanner, const char *name) {
+  if (scanner->depth < TAG_STACK_MAX) {
+    char *slot = scanner->names[scanner->depth];
+    unsigned i = 0;
+    for (; name[i] != '\0'; i++) {
+      slot[i] = name[i];
+    }
+    slot[i] = '\0';
+  }
+  if (scanner->depth < UINT16_MAX) {
+    scanner->depth++;
+  }
+}
+
+static void pop_tag(Scanner *scanner) {
+  if (scanner->depth > 0) {
+    scanner->depth--;
+  }
+}
+
+// Whether `name` is an open element below the innermost one.
+static bool open_below_top(Scanner *scanner, const char *name) {
+  unsigned named = scanner->depth < TAG_STACK_MAX ? scanner->depth : TAG_STACK_MAX;
+  for (unsigned i = 0; i + 1 < named; i++) {
+    if (strcmp(scanner->names[i], name) == 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// A zero-width token that ends the innermost open element before the next
+// start tag, end tag, or the end of the file, when HTML implies that end.
+static bool scan_implicit_end_tag(TSLexer *lexer, Scanner *scanner) {
+  while (is_space(lexer->lookahead)) {
+    lexer->advance(lexer, true);
+  }
+  lexer->mark_end(lexer);
+  if (scanner->depth == 0) {
+    return false;
+  }
+  bool implied = false;
+  if (lexer->eof(lexer)) {
+    implied = true;
+  } else if (lexer->lookahead == '<') {
+    lexer->advance(lexer, false);
+    char name[TAG_NAME_MAX + 1];
+    if (lexer->lookahead == '/') {
+      lexer->advance(lexer, false);
+      // An end tag for an element further out closes this one first. An end
+      // tag that names no open element still closes the innermost one, as
+      // before, so it is not implied here.
+      implied = read_tag_name(lexer, name) && strcmp(name, top_name(scanner)) != 0 &&
+                open_below_top(scanner, name);
+    } else if (read_tag_name(lexer, name)) {
+      implied = start_tag_closes(top_name(scanner), name);
+    }
+  }
+  if (!implied) {
+    return false;
+  }
+  pop_tag(scanner);
+  lexer->result_symbol = IMPLICIT_END_TAG;
+  return true;
+}
+
+static bool scan_start_tag_name(TSLexer *lexer, Scanner *scanner) {
+  char name[TAG_NAME_MAX + 1];
+  if (!read_tag_name(lexer, name) || name_in(name, RESERVED_TAGS, COUNT(RESERVED_TAGS))) {
+    return false;
+  }
+  lexer->mark_end(lexer);
+  push_tag(scanner, name);
+  lexer->result_symbol = START_TAG_NAME;
+  return true;
+}
+
+// An end tag closes the innermost open element whether or not the names
+// match; implied end tags have already closed anything between it and a
+// matching element further out.
+static bool scan_end_tag_name(TSLexer *lexer, Scanner *scanner) {
+  while (is_space(lexer->lookahead)) {
+    lexer->advance(lexer, true);
+  }
+  char name[TAG_NAME_MAX + 1];
+  if (!read_tag_name(lexer, name)) {
+    return false;
+  }
+  lexer->mark_end(lexer);
+  pop_tag(scanner);
+  lexer->result_symbol = END_TAG_NAME;
+  return true;
+}
+
+static bool scan_self_closing_delimiter(TSLexer *lexer, Scanner *scanner) {
+  while (is_space(lexer->lookahead)) {
+    lexer->advance(lexer, true);
+  }
+  if (lexer->lookahead != '/') {
+    return false;
+  }
+  lexer->advance(lexer, false);
+  if (lexer->lookahead != '>') {
+    return false;
+  }
+  lexer->advance(lexer, false);
+  lexer->mark_end(lexer);
+  pop_tag(scanner);
+  lexer->result_symbol = SELF_CLOSING_DELIMITER;
+  return true;
+}
+
 bool tree_sitter_aspx_external_scanner_scan(void *payload, TSLexer *lexer, const bool *valid_symbols) {
   Scanner *scanner = payload;
   if (scanner == NULL) {
@@ -450,6 +713,22 @@ bool tree_sitter_aspx_external_scanner_scan(void *payload, TSLexer *lexer, const
   // language value and could switch the language for the rest of the page.
   if (valid_symbols[LANG_CSHARP] && valid_symbols[HANDLER_CSHARP]) {
     return false;
+  }
+
+  if (valid_symbols[IMPLICIT_END_TAG]) {
+    return scan_implicit_end_tag(lexer, scanner);
+  }
+
+  if (valid_symbols[START_TAG_NAME]) {
+    return scan_start_tag_name(lexer, scanner);
+  }
+
+  if (valid_symbols[END_TAG_NAME]) {
+    return scan_end_tag_name(lexer, scanner);
+  }
+
+  if (valid_symbols[SELF_CLOSING_DELIMITER]) {
+    return scan_self_closing_delimiter(lexer, scanner);
   }
 
   if (valid_symbols[LANG_CSHARP] || valid_symbols[LANG_VB] || valid_symbols[LANG_OTHER]) {

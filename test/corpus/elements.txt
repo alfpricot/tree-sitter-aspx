@@ -176,3 +176,169 @@ nuggets inside cdata and an xml declaration
           (c_sharp_code)))
       (end_tag
         (tag_name)))))
+
+================================================================================
+omitted end tags in lists and paragraphs
+================================================================================
+
+<ul>
+  <li>One
+  <li>Two <%= Count %>
+</ul>
+<p>First
+<p>Second
+<div>block</div>
+
+---
+
+(source_file
+  (document
+    (element
+      (start_tag
+        (tag_name))
+      (element
+        (start_tag
+          (tag_name))
+        (text))
+      (element
+        (start_tag
+          (tag_name))
+        (text)
+        (output_expression
+          (c_sharp_code)))
+      (end_tag
+        (tag_name)))
+    (element
+      (start_tag
+        (tag_name))
+      (text))
+    (element
+      (start_tag
+        (tag_name))
+      (text))
+    (element
+      (start_tag
+        (tag_name))
+      (text)
+      (end_tag
+        (tag_name)))))
+
+================================================================================
+omitted end tags in tables, selects, and definition lists
+================================================================================
+
+<table>
+  <tr><td>a<td>b
+  <tr><td>c
+</table>
+<select><option>1<option>2</select>
+<dl><dt>t<dd>d</dl>
+
+---
+
+(source_file
+  (document
+    (element
+      (start_tag
+        (tag_name))
+      (element
+        (start_tag
+          (tag_name))
+        (element
+          (start_tag
+            (tag_name))
+          (text))
+        (element
+          (start_tag
+            (tag_name))
+          (text)))
+      (element
+        (start_tag
+          (tag_name))
+        (element
+          (start_tag
+            (tag_name))
+          (text)))
+      (end_tag
+        (tag_name)))
+    (element
+      (start_tag
+        (tag_name))
+      (element
+        (start_tag
+          (tag_name))
+        (text))
+      (element
+        (start_tag
+          (tag_name))
+        (text))
+      (end_tag
+        (tag_name)))
+    (element
+      (start_tag
+        (tag_name))
+      (element
+        (start_tag
+          (tag_name))
+        (text))
+      (element
+        (start_tag
+          (tag_name))
+        (text))
+      (end_tag
+        (tag_name)))))
+
+================================================================================
+open elements close at the end of the file
+================================================================================
+
+<div><span>unclosed
+
+---
+
+(source_file
+  (document
+    (element
+      (start_tag
+        (tag_name))
+      (element
+        (start_tag
+          (tag_name))
+        (text)))))
+
+================================================================================
+end tag for an outer element closes inner ones and mismatched end tags still close
+================================================================================
+
+<div><span><b>x</div>
+<asp:Panel>y</ASP:PANEL>
+<em>z</strong>
+
+---
+
+(source_file
+  (document
+    (element
+      (start_tag
+        (tag_name))
+      (element
+        (start_tag
+          (tag_name))
+        (element
+          (start_tag
+            (tag_name))
+          (text)))
+      (end_tag
+        (tag_name)))
+    (element
+      (start_tag
+        (tag_name))
+      (text)
+      (end_tag
+        (tag_name)))
+    (element
+      (start_tag
+        (tag_name))
+      (text)
+      (end_tag
+        (tag_name)))))
