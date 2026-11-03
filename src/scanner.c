@@ -791,9 +791,7 @@ static bool scan_implicit_end_tag(TSLexer *lexer, Scanner *scanner) {
         implied = d > 0 && d < scanner->depth;
       }
     } else {
-      while (is_space(lexer->lookahead)) {
-        lexer->advance(lexer, false);
-      }
+      // A `<` followed by whitespace is text, not a start tag.
       implied = read_tag_name(lexer, name) && start_tag_implies_end(scanner, name);
     }
   }
@@ -806,9 +804,6 @@ static bool scan_implicit_end_tag(TSLexer *lexer, Scanner *scanner) {
 }
 
 static bool scan_start_tag_name(TSLexer *lexer, Scanner *scanner) {
-  while (is_space(lexer->lookahead)) {
-    lexer->advance(lexer, true);
-  }
   char name[TAG_NAME_MAX + 1];
   if (!read_tag_name(lexer, name) || name_in(name, RESERVED_TAGS, COUNT(RESERVED_TAGS))) {
     return false;
