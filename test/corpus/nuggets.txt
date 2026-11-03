@@ -93,3 +93,28 @@ nugget inside an attribute
       (text)
       (end_tag
         (tag_name)))))
+
+================================================================================
+server comment closes after a run of dashes
+================================================================================
+
+<%-- note ---%>
+<%-----%>
+<%-- a -- b -----%>
+<p>after</p>
+
+---
+
+(source_file
+  (document
+    (server_comment
+      (server_comment_text))
+    (server_comment)
+    (server_comment
+      (server_comment_text))
+    (element
+      (start_tag
+        (tag_name))
+      (text)
+      (end_tag
+        (tag_name)))))

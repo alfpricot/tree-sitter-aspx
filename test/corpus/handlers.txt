@@ -71,3 +71,26 @@ global application file
       (language_attribute
         (attribute_name)
         (language_value)))))
+
+================================================================================
+handler directive names ignore case
+================================================================================
+
+<%@ Webhandler Language="VB" Class="Example.Handler" %>
+Public Class Handler
+End Class
+
+---
+
+(source_file
+  (handler_file
+    (handler_directive
+      (directive_name)
+      (language_attribute
+        (attribute_name)
+        (language_value))
+      (attribute
+        (attribute_name)
+        (quoted_attribute_value
+          (attribute_value))))
+    (handler_code)))

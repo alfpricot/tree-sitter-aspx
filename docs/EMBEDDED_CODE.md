@@ -2,7 +2,7 @@
 
 How the grammar exposes the C# and VB.NET inside a Web Forms page, and how a consumer should count or inject that code.
 
-Code nuggets and server-script bodies are opaque ranges. The page `Language` attribute (`C#` or `VB`, any casing) is a `language_value` node, and the scanner labels each later nugget `c_sharp_code` or `vb_code`. When the attribute is absent, the label is `c_sharp_code`.
+Code nuggets and server-script bodies are opaque ranges. The `Language` attribute of a directive is a `language_value` node, and the scanner labels each later nugget `c_sharp_code` or `vb_code`. The value may be quoted or unquoted and is matched without regard to case: `C#`, `cs`, and `CSharp` select C#, and `VB`, `vbs`, `VisualBasic`, and `VBScript` select VB. Any other value, an empty value, or no attribute at all leaves the label unchanged, and the label starts as `c_sharp_code`. A `language` attribute on an element, such as `<script language="VB" runat="server">`, is an ordinary attribute and does not change the label.
 
 | Node | What it is |
 | --- | --- |

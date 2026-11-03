@@ -107,3 +107,127 @@ register import assembly and output cache
         (attribute_name)
         (quoted_attribute_value
           (attribute_value))))))
+
+================================================================================
+language aliases, unquoted values, and surrounding spaces
+================================================================================
+
+<%@ Page Language=VB %>
+<% Dim a %>
+<%@ Control Language="cs" %>
+<% int b; %>
+<%@ Control Language='vbscript' %>
+<% Dim c %>
+<%@ Control Language=" CSharp " %>
+<% int d; %>
+
+---
+
+(source_file
+  (document
+    (directive
+      (directive_name)
+      (language_attribute
+        (attribute_name)
+        (language_value)))
+    (statement_block
+      (vb_code))
+    (directive
+      (directive_name)
+      (language_attribute
+        (attribute_name)
+        (language_value)))
+    (statement_block
+      (c_sharp_code))
+    (directive
+      (directive_name)
+      (language_attribute
+        (attribute_name)
+        (language_value)))
+    (statement_block
+      (vb_code))
+    (directive
+      (directive_name)
+      (language_attribute
+        (attribute_name)
+        (language_value)))
+    (statement_block
+      (c_sharp_code))))
+
+================================================================================
+empty language value keeps the page language
+================================================================================
+
+<%@ Page Language="" %>
+<% int x; %>
+
+---
+
+(source_file
+  (document
+    (directive
+      (directive_name)
+      (language_attribute
+        (attribute_name)))
+    (statement_block
+      (c_sharp_code))))
+
+================================================================================
+element language attribute does not change the page language
+================================================================================
+
+<%@ Page Language="C#" %>
+<script language="VB" runat="server">
+  Sub A()
+  End Sub
+</script>
+<% int x; %>
+
+---
+
+(source_file
+  (document
+    (directive
+      (directive_name)
+      (language_attribute
+        (attribute_name)
+        (language_value)))
+    (script_element
+      (start_tag
+        (tag_name)
+        (attribute
+          (attribute_name)
+          (quoted_attribute_value
+            (attribute_value)))
+        (attribute
+          (attribute_name)
+          (quoted_attribute_value
+            (attribute_value))))
+      (c_sharp_code)
+      (end_tag
+        (tag_name)))
+    (statement_block
+      (c_sharp_code))))
+
+================================================================================
+malformed directive does not change the page language
+================================================================================
+
+<%@ Page Language="C#" %>
+<%@ Page "vb" %>
+<% int x = 1; %>
+
+---
+
+(source_file
+  (document
+    (directive
+      (directive_name)
+      (language_attribute
+        (attribute_name)
+        (language_value)))
+    (ERROR
+      (directive_name)
+      (attribute_value))
+    (statement_block
+      (c_sharp_code))))
