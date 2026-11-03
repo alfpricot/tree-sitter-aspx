@@ -168,3 +168,65 @@ handler directive with no code
         (attribute_name)
         (quoted_attribute_value
           (attribute_value))))))
+
+================================================================================
+directive after the handler directive
+================================================================================
+
+<%@ WebHandler Language="C#" Class="Example.Handler" %>
+<%@ Assembly Name="System.Web.Extensions" %>
+public class Handler {}
+
+---
+
+(source_file
+  (handler_file
+    (handler_directive
+      (directive_name)
+      (language_attribute
+        (attribute_name)
+        (language_value))
+      (attribute
+        (attribute_name)
+        (quoted_attribute_value
+          (attribute_value))))
+    (directive
+      (directive_name)
+      (attribute
+        (attribute_name)
+        (quoted_attribute_value
+          (attribute_value))))
+    (handler_code
+      (c_sharp_code))))
+
+================================================================================
+markup inside handler strings stays code
+================================================================================
+
+<%@ WebHandler Language="C#" Class="Example.Handler" %>
+public class Handler {
+  void Write(HttpContext c) {
+    c.Response.Write(@"
+<script src='a.js'>
+<script>alert(1);</script>
+<script />
+<%-- not closed
+");
+  }
+}
+
+---
+
+(source_file
+  (handler_file
+    (handler_directive
+      (directive_name)
+      (language_attribute
+        (attribute_name)
+        (language_value))
+      (attribute
+        (attribute_name)
+        (quoted_attribute_value
+          (attribute_value))))
+    (handler_code
+      (c_sharp_code))))

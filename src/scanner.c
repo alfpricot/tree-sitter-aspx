@@ -246,27 +246,91 @@ static bool ends_language_value(int32_t c) {
   return c == 0 || c == '"' || c == '\'' || c == '>' || is_space(c) || c > 127;
 }
 
-// True at a `<script` start tag name (followed by whitespace, `>`, or `/`)
-// or at `%--`, with the lexer just past the `<`.
+// Case-insensitive search for `word` ahead of the lexer, stopping at `stop`
+// (or EOF). Consumes what it reads.
+static bool find_ci_before(TSLexer *lexer, const char *word, int32_t stop) {
+  while (lexer->lookahead != 0 && lexer->lookahead != stop) {
+    if (ascii_lower(lexer->lookahead) == word[0]) {
+      lexer->advance(lexer, false);
+      if (match_ci(lexer, word + 1)) {
+        return true;
+      }
+      continue;
+    }
+    lexer->advance(lexer, false);
+  }
+  return false;
+}
+
+// Consumes up to and including `--%>`, reporting whether it was found.
+static bool find_comment_end(TSLexer *lexer) {
+  unsigned dashes = 0;
+  while (lexer->lookahead != 0) {
+    int32_t c = lexer->lookahead;
+    lexer->advance(lexer, false);
+    if (c == '-') {
+      dashes++;
+    } else if (c == '%' && dashes >= 2 && lexer->lookahead == '>') {
+      return true;
+    } else {
+      dashes = 0;
+    }
+  }
+  return false;
+}
+
+// With the lexer just past a line-start `<`, reports whether what follows is
+// markup the handler grammar can finish, so the code should stop before it:
+//   * `<%@ ... %>`, a directive such as `<%@ Assembly Name="..." %>`;
+//   * `<%-- ... --%>`, a complete server comment;
+//   * `<script ... runat ... >` that is not self-closing and has a later
+//     `</script>`. Only server scripts mean anything in a handler file; a
+//     client `<script>` line is almost always HTML inside a C# or VB string.
+// Consumes what it reads; on false the caller treats all of it as code.
 static bool at_handler_markup(TSLexer *lexer) {
   if (lexer->lookahead == '%') {
+    lexer->advance(lexer, false);
+    if (lexer->lookahead == '@') {
+      return find_ci_before(lexer, "%>", 0);
+    }
+    if (lexer->lookahead != '-') {
+      return false;
+    }
     lexer->advance(lexer, false);
     if (lexer->lookahead != '-') {
       return false;
     }
     lexer->advance(lexer, false);
-    return lexer->lookahead == '-';
+    return find_comment_end(lexer);
   }
-  if (!match_ci(lexer, "script")) {
+  if (!match_ci(lexer, "script") ||
+      !(is_space(lexer->lookahead) || lexer->lookahead == '>')) {
     return false;
   }
-  return is_space(lexer->lookahead) || lexer->lookahead == '>' || lexer->lookahead == '/';
+  bool runat = false;
+  int32_t previous = 0;
+  while (lexer->lookahead != 0 && lexer->lookahead != '>') {
+    if (ascii_lower(lexer->lookahead) == 'r') {
+      lexer->advance(lexer, false);
+      if (match_ci(lexer, "unat")) {
+        runat = true;
+      }
+      previous = 0;
+      continue;
+    }
+    previous = lexer->lookahead;
+    lexer->advance(lexer, false);
+  }
+  if (!runat || previous == '/' || lexer->lookahead != '>') {
+    return false;
+  }
+  return find_ci_before(lexer, "</script", 0);
 }
 
 // The body of a WebHandler or WebService file is code up to EOF, except that
-// a line starting with `<script` or `<%--` (after optional indentation)
-// begins a script element or server comment. Leading whitespace is skipped,
-// so the code starts at its first non-space character.
+// a line starting (after optional indentation) with a directive, a server
+// comment, or a server script begins that construct instead. Leading
+// whitespace is skipped, so the code starts at its first non-space character.
 static bool scan_handler_code(TSLexer *lexer) {
   while (is_space(lexer->lookahead)) {
     lexer->advance(lexer, true);
@@ -281,6 +345,8 @@ static bool scan_handler_code(TSLexer *lexer) {
       if (at_handler_markup(lexer)) {
         return has_content;
       }
+      // Not markup: everything just read is code. It may have crossed
+      // newlines, so the next `<` is not treated as a line start.
       lexer->mark_end(lexer);
       has_content = true;
       line_start = false;

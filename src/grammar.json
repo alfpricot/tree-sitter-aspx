@@ -45,6 +45,10 @@
             "members": [
               {
                 "type": "SYMBOL",
+                "name": "directive"
+              },
+              {
+                "type": "SYMBOL",
                 "name": "server_comment"
               },
               {

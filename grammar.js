@@ -87,7 +87,7 @@ export default grammar({
     handler_file: ($) =>
       seq(
         $.handler_directive,
-        repeat(choice($.server_comment, $.script_element, $.handler_code)),
+        repeat(choice($.directive, $.server_comment, $.script_element, $.handler_code)),
       ),
 
     // The code of a handler file, labeled with the directive's language like

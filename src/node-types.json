@@ -419,6 +419,10 @@
       "required": true,
       "types": [
         {
+          "type": "directive",
+          "named": true
+        },
+        {
           "type": "handler_code",
           "named": true
         },
