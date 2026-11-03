@@ -79,6 +79,7 @@ export default grammar({
     $._implicit_end_tag,
     $._self_closing_delimiter,
     $._stray_end_tag_name,
+    $._script_tag_probe,
   ],
 
   rules: {
@@ -267,8 +268,17 @@ export default grammar({
         alias($.script_end_tag, $.end_tag),
       ),
 
+    // The probe is a zero-width scanner token that reads the tag's `runat`
+    // and `language` ahead of the grammar, so a server script's body is
+    // labeled with its own language.
     script_start_tag: ($) =>
-      seq('<', field('name', alias($.script_tag_name, $.tag_name)), repeat($._tag_item), '>'),
+      seq(
+        '<',
+        field('name', alias($.script_tag_name, $.tag_name)),
+        $._script_tag_probe,
+        repeat($._tag_item),
+        '>',
+      ),
 
     script_end_tag: ($) => seq('</', field('name', alias($.script_tag_name, $.tag_name)), '>'),
 
@@ -311,13 +321,12 @@ export default grammar({
         ),
         seq(
           '<',
-          field(
-            'name',
-            choice(alias($.script_tag_name, $.tag_name), alias($.style_tag_name, $.tag_name)),
-          ),
+          field('name', alias($.script_tag_name, $.tag_name)),
+          $._script_tag_probe,
           repeat($._tag_item),
           '/>',
         ),
+        seq('<', field('name', alias($.style_tag_name, $.tag_name)), repeat($._tag_item), '/>'),
       ),
 
     // An element ends at its end tag or, for HTML's optional end tags (`li`,

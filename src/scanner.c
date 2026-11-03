@@ -40,6 +40,7 @@ enum TokenType {
   IMPLICIT_END_TAG,
   SELF_CLOSING_DELIMITER,
   STRAY_END_TAG_NAME,
+  SCRIPT_TAG_PROBE,
 };
 
 enum Language {
@@ -56,8 +57,16 @@ enum Language {
 #define TAG_STACK_MAX 64
 #define TAG_NAME_MAX 31
 
+// `language` is the page language. `language_set` records that a directive
+// or server script named it, and `script_language` is the language a
+// server script's own `language` attribute gives its body (SCRIPT_UNSET
+// when it has none).
+#define SCRIPT_UNSET 2
+
 typedef struct {
   uint8_t language;
+  bool language_set;
+  uint8_t script_language;
   uint16_t depth;
   uint16_t known_from;
   char names[TAG_STACK_MAX][TAG_NAME_MAX + 1];
@@ -83,6 +92,8 @@ void *tree_sitter_aspx_external_scanner_create(void) {
   Scanner *scanner = ts_malloc(sizeof(Scanner));
   if (scanner != NULL) {
     scanner->language = LANGUAGE_CSHARP;
+    scanner->language_set = false;
+    scanner->script_language = SCRIPT_UNSET;
     scanner->depth = 0;
     scanner->known_from = 1;
   }
@@ -93,7 +104,9 @@ void tree_sitter_aspx_external_scanner_destroy(void *payload) {
   ts_free(payload);
 }
 
-// Layout: language, depth (two bytes, little-endian), the number of names
+// Layout: a flags byte (page language in bit 0, whether it was set in bit 1,
+// the server script language in bits 2-3), depth (two bytes,
+// little-endian), the number of names
 // stored, then each stored name as a length byte and its characters,
 // innermost first. Names that do not fit are restored as unknown.
 unsigned tree_sitter_aspx_external_scanner_serialize(void *payload, char *buffer) {
@@ -101,7 +114,8 @@ unsigned tree_sitter_aspx_external_scanner_serialize(void *payload, char *buffer
   if (scanner == NULL) {
     return 0;
   }
-  buffer[0] = (char)scanner->language;
+  buffer[0] = (char)(scanner->language | (scanner->language_set ? 2 : 0) |
+                     (scanner->script_language << 2));
   buffer[1] = (char)(scanner->depth & 0xff);
   buffer[2] = (char)(scanner->depth >> 8);
   unsigned size = 4;
@@ -128,12 +142,17 @@ void tree_sitter_aspx_external_scanner_deserialize(void *payload, const char *bu
     return;
   }
   scanner->language = LANGUAGE_CSHARP;
+  scanner->language_set = false;
+  scanner->script_language = SCRIPT_UNSET;
   scanner->depth = 0;
   scanner->known_from = 1;
   if (length == 0) {
     return;
   }
-  scanner->language = (uint8_t)buffer[0];
+  uint8_t flags = (uint8_t)buffer[0];
+  scanner->language = flags & 1;
+  scanner->language_set = (flags & 2) != 0;
+  scanner->script_language = (flags >> 2) & 3;
   if (length < 4) {
     return;
   }
@@ -483,19 +502,25 @@ static bool scan_language(TSLexer *lexer, Scanner *scanner, const bool *valid_sy
   }
   if (symbol == LANG_CSHARP) {
     scanner->language = LANGUAGE_CSHARP;
+    scanner->language_set = true;
   } else if (symbol == LANG_VB) {
     scanner->language = LANGUAGE_VB;
+    scanner->language_set = true;
   }
   lexer->result_symbol = symbol;
   return true;
 }
 
 static bool emit_code(TSLexer *lexer, Scanner *scanner, const bool *valid_symbols, enum TokenType csharp, enum TokenType vb) {
-  enum TokenType symbol = scanner->language == LANGUAGE_VB ? vb : csharp;
+  bool is_script = csharp == SCRIPT_CSHARP;
+  uint8_t language = scanner->language;
+  if (is_script && scanner->script_language != SCRIPT_UNSET) {
+    language = scanner->script_language;
+  }
+  enum TokenType symbol = language == LANGUAGE_VB ? vb : csharp;
   if (!valid_symbols[symbol]) {
     return false;
   }
-  bool is_script = csharp == SCRIPT_CSHARP;
   if (is_script) {
     if (!scan_until_end_tag(lexer, "script")) {
       return false;
@@ -825,6 +850,85 @@ static bool scan_self_closing_delimiter(TSLexer *lexer, Scanner *scanner) {
   return true;
 }
 
+// ---- Server script language --------------------------------------------
+
+// Reads an attribute value at the lexer: quoted (with nuggets inside skipped)
+// or unquoted. Keeps the first characters, lowercased, in `out`.
+static void read_attribute_value(TSLexer *lexer, char *out, unsigned size) {
+  unsigned n = 0;
+  int32_t quote = 0;
+  if (lexer->lookahead == '"' || lexer->lookahead == '\'') {
+    quote = lexer->lookahead;
+    lexer->advance(lexer, false);
+  }
+  while (lexer->lookahead != 0) {
+    int32_t c = lexer->lookahead;
+    if (quote != 0 ? c == quote : (is_space(c) || c == '>' || c == '/')) {
+      break;
+    }
+    if (n + 1 < size) {
+      out[n++] = (char)ascii_lower(c);
+    }
+    lexer->advance(lexer, false);
+  }
+  if (quote != 0 && lexer->lookahead == quote) {
+    lexer->advance(lexer, false);
+  }
+  out[n] = '\0';
+}
+
+// A zero-width token at the start of a script start tag's attributes. It
+// reads ahead through the tag for `runat` and `language`: a server script
+// with a recognized language labels its own body with that language, and
+// when no directive has named the page language, ASP.NET takes it from the
+// script, so later nuggets follow it too. A client script's `language`
+// (often VBScript or JavaScript) changes nothing.
+static bool scan_script_tag_probe(TSLexer *lexer, Scanner *scanner) {
+  lexer->mark_end(lexer);
+  bool server = false;
+  uint8_t language = SCRIPT_UNSET;
+  while (lexer->lookahead != 0 && lexer->lookahead != '>') {
+    if (is_space(lexer->lookahead)) {
+      lexer->advance(lexer, false);
+      continue;
+    }
+    char name[TAG_NAME_MAX + 1];
+    if (!read_tag_name(lexer, name)) {
+      lexer->advance(lexer, false);
+      continue;
+    }
+    while (is_space(lexer->lookahead)) {
+      lexer->advance(lexer, false);
+    }
+    if (lexer->lookahead != '=') {
+      continue;
+    }
+    lexer->advance(lexer, false);
+    while (is_space(lexer->lookahead)) {
+      lexer->advance(lexer, false);
+    }
+    char value[32];
+    read_attribute_value(lexer, value, sizeof(value));
+    if (strcmp(name, "runat") == 0) {
+      server = strcmp(value, "server") == 0;
+    } else if (strcmp(name, "language") == 0) {
+      language = SCRIPT_UNSET;
+      if (name_in(value, CSHARP_NAMES, COUNT(CSHARP_NAMES))) {
+        language = LANGUAGE_CSHARP;
+      } else if (name_in(value, VB_NAMES, COUNT(VB_NAMES))) {
+        language = LANGUAGE_VB;
+      }
+    }
+  }
+  scanner->script_language = server ? language : SCRIPT_UNSET;
+  if (scanner->script_language != SCRIPT_UNSET && !scanner->language_set) {
+    scanner->language = scanner->script_language;
+    scanner->language_set = true;
+  }
+  lexer->result_symbol = SCRIPT_TAG_PROBE;
+  return true;
+}
+
 bool tree_sitter_aspx_external_scanner_scan(void *payload, TSLexer *lexer, const bool *valid_symbols) {
   Scanner *scanner = payload;
   if (scanner == NULL) {
@@ -837,6 +941,10 @@ bool tree_sitter_aspx_external_scanner_scan(void *payload, TSLexer *lexer, const
   // language value and could switch the language for the rest of the page.
   if (valid_symbols[LANG_CSHARP] && valid_symbols[HANDLER_CSHARP]) {
     return false;
+  }
+
+  if (valid_symbols[SCRIPT_TAG_PROBE]) {
+    return scan_script_tag_probe(lexer, scanner);
   }
 
   if (valid_symbols[IMPLICIT_END_TAG]) {
