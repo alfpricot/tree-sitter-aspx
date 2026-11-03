@@ -236,7 +236,7 @@ export default grammar({
       seq('<%$', optional(alias($.expression_text, $.expression_value)), '%>'),
 
     // Script and style bodies are raw text up to their end tag, except that
-    // nuggets and server comments inside them are still parsed. A body
+    // nuggets, server comments, and directives inside them are still parsed. A body
     // split by a nugget is several code or style_text chunks; the injection
     // query combines them.
     script_element: ($) =>
@@ -248,6 +248,7 @@ export default grammar({
             alias($._script_vb, $.vb_code),
             $._nugget,
             $.server_comment,
+            $.directive,
           ),
         ),
         alias($.script_end_tag, $.end_tag),
@@ -263,7 +264,7 @@ export default grammar({
     style_element: ($) =>
       seq(
         alias($.style_start_tag, $.start_tag),
-        repeat(choice($.style_text, $._nugget, $.server_comment)),
+        repeat(choice($.style_text, $._nugget, $.server_comment, $.directive)),
         alias($.style_end_tag, $.end_tag),
       ),
 
@@ -331,10 +332,38 @@ export default grammar({
     doctype_token: (_) => token(prec(RESERVED, /<![Dd][Oo][Cc][Tt][Yy][Pp][Ee]/)),
 
     // `<![CDATA[ ... ]]>` and `<?xml ... ?>` appear in XHTML-era pages and
-    // .asmx files. Both are single tokens.
-    cdata_section: (_) => token(/<!\[CDATA\[([^\]]|\][^\]]|\]\]+[^\]>])*\]\]+>/),
+    // .asmx files. ASP.NET still runs nuggets inside them, as in an RSS feed's
+    // `<![CDATA[<%# Eval("Body") %>]]>`, so nuggets stay real nodes and the
+    // rest is text.
+    cdata_section: ($) =>
+      seq(
+        '<![CDATA[',
+        repeat(
+          choice(
+            $._nugget,
+            $.server_comment,
+            alias(/[^\]<]+/, $.text),
+            alias(']', $.text),
+            alias('<', $.text),
+          ),
+        ),
+        ']]>',
+      ),
 
-    processing_instruction: (_) => token(/<\?([^?]|\?+[^?>])*\?+>/),
+    processing_instruction: ($) =>
+      seq(
+        '<?',
+        repeat(
+          choice(
+            $._nugget,
+            $.server_comment,
+            alias(/[^?<]+/, $.text),
+            alias('?', $.text),
+            alias('<', $.text),
+          ),
+        ),
+        '?>',
+      ),
 
     text: (_) => /[^<\s][^<]*/,
   },

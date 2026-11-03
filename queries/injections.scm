@@ -15,8 +15,10 @@
 ;
 ; A nugget inside a <script> or <style> body splits the body into several
 ; code or style_text chunks. Those patterns set injection.combined so the
-; chunks are parsed as one script or stylesheet with the nuggets left out;
-; the nuggets themselves are injected by the patterns above.
+; chunks are parsed together with the nuggets left out; the nuggets
+; themselves are injected by the patterns above. Combined injection joins
+; every match of a pattern in the page, so all client script bodies form one
+; JavaScript document, and likewise for server scripts and styles.
 
 ((statement_block
    (c_sharp_code) @injection.content)

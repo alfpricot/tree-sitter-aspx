@@ -146,10 +146,54 @@ static bool match_ci(TSLexer *lexer, const char *lower) {
   return true;
 }
 
+// After `</`, matches `name` with optional whitespace before `>`.
+static bool at_end_tag_name(TSLexer *lexer, const char *name) {
+  if (!match_ci(lexer, name)) {
+    return false;
+  }
+  while (is_space(lexer->lookahead)) {
+    lexer->advance(lexer, false);
+  }
+  return lexer->lookahead == '>';
+}
+
+// Called with the lexer just past the `<` of a `<%` at the start of a body
+// chunk. Reports whether a `%>` closes it before the body's end tag. When it
+// does not, the `<%` is literal text (for example inside a string in a server
+// script), so the token end is moved to the end tag or EOF as the scan goes.
+static bool nugget_closes_in_body(TSLexer *lexer, const char *name) {
+  lexer->advance(lexer, false);
+  while (lexer->lookahead != 0) {
+    if (lexer->lookahead == '%') {
+      lexer->advance(lexer, false);
+      if (lexer->lookahead == '>') {
+        return true;
+      }
+      lexer->mark_end(lexer);
+      continue;
+    }
+    if (lexer->lookahead == '<') {
+      lexer->mark_end(lexer);
+      lexer->advance(lexer, false);
+      if (lexer->lookahead == '/') {
+        lexer->advance(lexer, false);
+        if (at_end_tag_name(lexer, name)) {
+          return false;
+        }
+      }
+      lexer->mark_end(lexer);
+      continue;
+    }
+    lexer->advance(lexer, false);
+    lexer->mark_end(lexer);
+  }
+  return false;
+}
+
 // Content runs until `</name` with optional whitespace before `>`, or until
 // a `<%` that opens a nugget or server comment inside the body. On a stop the
-// token end stays where the caller marked it, before the `<`. Otherwise the
-// consumed characters become content.
+// token end stays where the caller marked it, before the `<`. A `<%` with no
+// `%>` before the end tag is not a nugget and stays in the content.
 static bool scan_until_end_tag(TSLexer *lexer, const char *name) {
   bool has_content = false;
   while (lexer->lookahead != 0) {
@@ -157,17 +201,17 @@ static bool scan_until_end_tag(TSLexer *lexer, const char *name) {
       lexer->mark_end(lexer);
       lexer->advance(lexer, false);
       if (lexer->lookahead == '%') {
-        return has_content;
+        // Stop before the `<%`; the next scan starts there and decides
+        // whether it opens a nugget.
+        if (has_content) {
+          return true;
+        }
+        return !nugget_closes_in_body(lexer, name);
       }
       if (lexer->lookahead == '/') {
         lexer->advance(lexer, false);
-        if (match_ci(lexer, name)) {
-          while (is_space(lexer->lookahead)) {
-            lexer->advance(lexer, false);
-          }
-          if (lexer->lookahead == '>') {
-            return has_content;
-          }
+        if (at_end_tag_name(lexer, name)) {
+          return has_content;
         }
       }
       lexer->mark_end(lexer);

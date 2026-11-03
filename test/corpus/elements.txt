@@ -135,10 +135,44 @@ xml declaration and cdata section
 
 (source_file
   (document
-    (processing_instruction)
+    (processing_instruction
+      (text))
     (element
       (start_tag
         (tag_name))
-      (cdata_section)
+      (cdata_section
+        (text)
+        (text)
+        (text)
+        (text)
+        (text)
+        (text)
+        (text)
+        (text))
+      (end_tag
+        (tag_name)))))
+
+================================================================================
+nuggets inside cdata and an xml declaration
+================================================================================
+
+<?xml version="1.0" encoding="<%= Enc %>"?>
+<rss><![CDATA[<%# Eval("Body") %>]]></rss>
+
+---
+
+(source_file
+  (document
+    (processing_instruction
+      (text)
+      (output_expression
+        (c_sharp_code))
+      (text))
+    (element
+      (start_tag
+        (tag_name))
+      (cdata_section
+        (binding_expression
+          (c_sharp_code)))
       (end_tag
         (tag_name)))))

@@ -49,6 +49,45 @@
     }
   },
   {
+    "type": "cdata_section",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "binding_expression",
+          "named": true
+        },
+        {
+          "type": "encoded_expression",
+          "named": true
+        },
+        {
+          "type": "expression_builder",
+          "named": true
+        },
+        {
+          "type": "output_expression",
+          "named": true
+        },
+        {
+          "type": "server_comment",
+          "named": true
+        },
+        {
+          "type": "statement_block",
+          "named": true
+        },
+        {
+          "type": "text",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "directive",
     "named": true,
     "fields": {
@@ -468,6 +507,45 @@
     }
   },
   {
+    "type": "processing_instruction",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "binding_expression",
+          "named": true
+        },
+        {
+          "type": "encoded_expression",
+          "named": true
+        },
+        {
+          "type": "expression_builder",
+          "named": true
+        },
+        {
+          "type": "output_expression",
+          "named": true
+        },
+        {
+          "type": "server_comment",
+          "named": true
+        },
+        {
+          "type": "statement_block",
+          "named": true
+        },
+        {
+          "type": "text",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "quoted_attribute_value",
     "named": true,
     "fields": {},
@@ -520,6 +598,10 @@
         },
         {
           "type": "c_sharp_code",
+          "named": true
+        },
+        {
+          "type": "directive",
           "named": true
         },
         {
@@ -724,6 +806,10 @@
           "named": true
         },
         {
+          "type": "directive",
+          "named": true
+        },
+        {
           "type": "encoded_expression",
           "named": true
         },
@@ -846,6 +932,10 @@
     "named": false
   },
   {
+    "type": "<![CDATA[",
+    "named": false
+  },
+  {
     "type": "<%",
     "named": false
   },
@@ -878,11 +968,23 @@
     "named": false
   },
   {
+    "type": "<?",
+    "named": false
+  },
+  {
     "type": "=",
     "named": false
   },
   {
     "type": ">",
+    "named": false
+  },
+  {
+    "type": "?>",
+    "named": false
+  },
+  {
+    "type": "]]>",
     "named": false
   },
   {
@@ -895,10 +997,6 @@
   },
   {
     "type": "c_sharp_code",
-    "named": true
-  },
-  {
-    "type": "cdata_section",
     "named": true
   },
   {
@@ -923,10 +1021,6 @@
   },
   {
     "type": "language_value",
-    "named": true
-  },
-  {
-    "type": "processing_instruction",
     "named": true
   },
   {
