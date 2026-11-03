@@ -462,3 +462,47 @@ whitespace inside end tags
       (start_tag
         (tag_name))
       (text))))
+
+================================================================================
+whitespace after the bracket of a start tag
+================================================================================
+
+< div>x</div>
+
+---
+
+(source_file
+  (document
+    (element
+      (start_tag
+        (tag_name))
+      (text)
+      (end_tag
+        (tag_name)))))
+
+================================================================================
+a malformed start tag keeps later elements in step
+================================================================================
+
+<section><div <b>x</b></section><p>after
+
+---
+
+(source_file
+  (document
+    (element
+      (start_tag
+        (tag_name))
+      (element
+        (start_tag
+          (tag_name)
+          (ERROR))
+        (text)
+        (end_tag
+          (tag_name)))
+      (end_tag
+        (tag_name)))
+    (element
+      (start_tag
+        (tag_name))
+      (text))))
