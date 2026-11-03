@@ -173,7 +173,7 @@ empty language value keeps the page language
       (c_sharp_code))))
 
 ================================================================================
-element language attribute does not change the page language
+a server script's language labels its body but not the page
 ================================================================================
 
 <%@ Page Language="C#" %>
@@ -203,7 +203,7 @@ element language attribute does not change the page language
           (attribute_name)
           (quoted_attribute_value
             (attribute_value))))
-      (c_sharp_code)
+      (vb_code)
       (end_tag
         (tag_name)))
     (statement_block

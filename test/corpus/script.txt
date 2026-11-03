@@ -245,3 +245,96 @@ unclosed nugget opener at the end of a script body
       (tag_name))
     (c_sharp_code)
     (c_sharp_code)))
+
+================================================================================
+a server script names the page language when no directive does
+================================================================================
+
+<%@ Control %>
+<script runat="server" language="VB">
+  Sub A()
+  End Sub
+</script>
+<% Dim x %>
+
+---
+
+(source_file
+  (document
+    (directive
+      (directive_name))
+    (script_element
+      (start_tag
+        (tag_name)
+        (attribute
+          (attribute_name)
+          (quoted_attribute_value
+            (attribute_value)))
+        (attribute
+          (attribute_name)
+          (quoted_attribute_value
+            (attribute_value))))
+      (vb_code)
+      (end_tag
+        (tag_name)))
+    (statement_block
+      (vb_code))))
+
+================================================================================
+a client script's language does not change the page language
+================================================================================
+
+<script language="VBScript">MsgBox 1</script>
+<% int x; %>
+
+---
+
+(source_file
+  (document
+    (script_element
+      (start_tag
+        (tag_name)
+        (attribute
+          (attribute_name)
+          (quoted_attribute_value
+            (attribute_value))))
+      (c_sharp_code)
+      (end_tag
+        (tag_name)))
+    (statement_block
+      (c_sharp_code))))
+
+================================================================================
+nuggets and server comments in a script start tag are skipped
+================================================================================
+
+<script <%-- note --%> id="<%= "s" %>" runat="server" language="VB">x</script>
+<% Dim y %>
+
+---
+
+(source_file
+  (document
+    (script_element
+      (start_tag
+        (tag_name)
+        (server_comment
+          (server_comment_text))
+        (attribute
+          (attribute_name)
+          (quoted_attribute_value
+            (output_expression
+              (vb_code))))
+        (attribute
+          (attribute_name)
+          (quoted_attribute_value
+            (attribute_value)))
+        (attribute
+          (attribute_name)
+          (quoted_attribute_value
+            (attribute_value))))
+      (vb_code)
+      (end_tag
+        (tag_name)))
+    (statement_block
+      (vb_code))))

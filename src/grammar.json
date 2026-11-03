@@ -952,6 +952,10 @@
           }
         },
         {
+          "type": "SYMBOL",
+          "name": "_script_tag_probe"
+        },
+        {
           "type": "REPEAT",
           "content": {
             "type": "SYMBOL",
@@ -1366,27 +1370,50 @@
               "type": "FIELD",
               "name": "name",
               "content": {
-                "type": "CHOICE",
-                "members": [
-                  {
-                    "type": "ALIAS",
-                    "content": {
-                      "type": "SYMBOL",
-                      "name": "script_tag_name"
-                    },
-                    "named": true,
-                    "value": "tag_name"
-                  },
-                  {
-                    "type": "ALIAS",
-                    "content": {
-                      "type": "SYMBOL",
-                      "name": "style_tag_name"
-                    },
-                    "named": true,
-                    "value": "tag_name"
-                  }
-                ]
+                "type": "ALIAS",
+                "content": {
+                  "type": "SYMBOL",
+                  "name": "script_tag_name"
+                },
+                "named": true,
+                "value": "tag_name"
+              }
+            },
+            {
+              "type": "SYMBOL",
+              "name": "_script_tag_probe"
+            },
+            {
+              "type": "REPEAT",
+              "content": {
+                "type": "SYMBOL",
+                "name": "_tag_item"
+              }
+            },
+            {
+              "type": "STRING",
+              "value": "/>"
+            }
+          ]
+        },
+        {
+          "type": "SEQ",
+          "members": [
+            {
+              "type": "STRING",
+              "value": "<"
+            },
+            {
+              "type": "FIELD",
+              "name": "name",
+              "content": {
+                "type": "ALIAS",
+                "content": {
+                  "type": "SYMBOL",
+                  "name": "style_tag_name"
+                },
+                "named": true,
+                "value": "tag_name"
               }
             },
             {
@@ -1809,6 +1836,10 @@
     {
       "type": "SYMBOL",
       "name": "_stray_end_tag_name"
+    },
+    {
+      "type": "SYMBOL",
+      "name": "_script_tag_probe"
     }
   ],
   "inline": [],

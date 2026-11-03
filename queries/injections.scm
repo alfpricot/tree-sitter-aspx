@@ -9,9 +9,13 @@
 ;
 ; A <script> body uses the same code node. Without runat="server" the body
 ; is client script, so the query below replaces the page language with
-; JavaScript. With runat="server" the page language stands. ASP.NET compares
-; the value without regard to case and accepts it unquoted, so runat=SERVER
-; and runat=server count too.
+; JavaScript. With runat="server" the page language, or the script's own
+; language attribute, stands. ASP.NET compares the value without regard to
+; case and accepts it unquoted, so runat=SERVER and runat=server count too.
+; The pattern needs whitespace before runat and a non-name character after
+; server, so text such as src="x.ashx?runat=server" or runat="serverless"
+; does not match. It uses only syntax that Rust, ECMAScript, and Vim regex
+; read the same way.
 ; Expression builders (`<%$ ... %>`) are not C# or VB and are not injected.
 ; <style> bodies inject as CSS.
 ;
@@ -71,21 +75,21 @@
 ((script_element
    (start_tag) @_tag
    (c_sharp_code) @injection.content)
- (#match? @_tag "[Rr][Uu][Nn][Aa][Tt]\\s*=\\s*[\"']?[Ss][Ee][Rr][Vv][Ee][Rr]")
+ (#match? @_tag "\\s[Rr][Uu][Nn][Aa][Tt]\\s*=\\s*[\"']*[Ss][Ee][Rr][Vv][Ee][Rr][^A-Za-z0-9_:.-]")
  (#set! injection.language "c_sharp")
  (#set! injection.combined))
 
 ((script_element
    (start_tag) @_tag
    (vb_code) @injection.content)
- (#match? @_tag "[Rr][Uu][Nn][Aa][Tt]\\s*=\\s*[\"']?[Ss][Ee][Rr][Vv][Ee][Rr]")
+ (#match? @_tag "\\s[Rr][Uu][Nn][Aa][Tt]\\s*=\\s*[\"']*[Ss][Ee][Rr][Vv][Ee][Rr][^A-Za-z0-9_:.-]")
  (#set! injection.language "vb")
  (#set! injection.combined))
 
 ((script_element
    (start_tag) @_tag
    [(c_sharp_code) (vb_code)] @injection.content)
- (#not-match? @_tag "[Rr][Uu][Nn][Aa][Tt]\\s*=\\s*[\"']?[Ss][Ee][Rr][Vv][Ee][Rr]")
+ (#not-match? @_tag "\\s[Rr][Uu][Nn][Aa][Tt]\\s*=\\s*[\"']*[Ss][Ee][Rr][Vv][Ee][Rr][^A-Za-z0-9_:.-]")
  (#set! injection.language "javascript")
  (#set! injection.combined))
 

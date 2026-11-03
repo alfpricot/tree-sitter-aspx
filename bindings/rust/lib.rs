@@ -202,6 +202,33 @@ mod injection_tests {
     }
 
     #[test]
+    fn runat_must_be_its_own_attribute_with_the_value_server() {
+        for tag in [
+            "<script src=\"/x.ashx?runat=server\">",
+            "<script data-note='runat=Server'>",
+            "<script runat=\"serverless\">",
+            "<script data-runat=\"server\">",
+        ] {
+            let page = format!("{tag}a();</script>");
+            assert_eq!(injections(&page), pairs(&[("javascript", "a();")]), "{tag}");
+        }
+    }
+
+    #[test]
+    fn a_server_script_uses_its_own_language() {
+        assert_eq!(
+            injections(
+                "<%@ Control %><script runat=server language=VB>Sub F()\nEnd Sub</script><% Dim x %>"
+            ),
+            pairs(&[("vb", "Sub F()\nEnd Sub"), ("vb", " Dim x ")])
+        );
+        assert_eq!(
+            injections("<script language=\"VBScript\">MsgBox 1</script><% int x; %>"),
+            pairs(&[("javascript", "MsgBox 1"), ("c_sharp", " int x; ")])
+        );
+    }
+
+    #[test]
     fn client_scripts_and_styles_are_javascript_and_css() {
         assert_eq!(
             injections("<script type=\"text/javascript\">go();</script><style>a{}</style>"),
