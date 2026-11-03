@@ -6,7 +6,7 @@ The grammar is written once in `grammar.js`. The tree-sitter CLI generates a C p
 
 ## What tree-sitter-aspx is not
 
-- It is not an HTML validator. Tags are parsed structurally; an end tag closes the nearest open element whether or not the names match.
+- It is not an HTML validator. Tags are parsed structurally: the scanner keeps a stack of open elements, implies the end tags HTML lets a page omit, closes everything still open at the end of the file, and leaves an end tag whose name matches no open element in place without closing anything.
 - It is not a C# or VB.NET parser. Code inside a page is exposed as opaque `c_sharp_code` and `vb_code` ranges for a host to inject a real grammar into.
 - It does not cover Classic ASP, Razor, or code-behind files (`.aspx.cs`, `.aspx.vb`).
 
@@ -18,7 +18,7 @@ The grammar definition in the tree-sitter DSL, and the source of truth for the p
 
 ### [src/](src)
 
-`parser.c`, `grammar.json`, and `node-types.json` are generated from `grammar.js` and committed; CI regenerates them and fails on any difference. `scanner.c` is hand-written and is the external scanner: it reads code, comment, style, and handler bodies up to their terminator (`%>`, `--%>`, `</script>`, `</style>`, a handler line that starts a directive, a server comment, or a server `<script>` element, or end of file), which tree-sitter's regular expressions cannot express, and it records the page `Language` value so later code is labeled C# or VB.NET.
+`parser.c`, `grammar.json`, and `node-types.json` are generated from `grammar.js` and committed; CI regenerates them and fails on any difference. `scanner.c` is hand-written and is the external scanner: it reads code, comment, style, and handler bodies up to their terminator (`%>`, `--%>`, `</script>`, `</style>`, a handler line that starts a directive, a server comment, or a server `<script>` element, or end of file), which tree-sitter's regular expressions cannot express, it records the page `Language` value so later code is labeled C# or VB.NET, and it keeps the stack of open elements that implied end tags are decided from.
 
 ### [queries/](queries)
 

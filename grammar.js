@@ -56,8 +56,9 @@ export default grammar({
 
   // Reserved names (`col`, `script`, `Language`, `WebHandler`) must not match
   // a prefix of a longer name (`Columns`, `asp:ScriptManager`). Keywords are
-  // recognized only against this word token, so directive names and tag names
-  // both alias it.
+  // recognized only against this word token, which directive names use. Other
+  // tag names come from the scanner, which reads the whole name and leaves
+  // the reserved ones to the grammar.
   word: ($) => $._name,
 
   externals: ($) => [
@@ -73,6 +74,11 @@ export default grammar({
     $.expression_text,
     $._handler_csharp,
     $._handler_vb,
+    $._start_tag_name,
+    $._end_tag_name,
+    $._implicit_end_tag,
+    $._self_closing_delimiter,
+    $._stray_end_tag_name,
   ],
 
   rules: {
@@ -111,6 +117,7 @@ export default grammar({
         $.doctype,
         $.cdata_section,
         $.processing_instruction,
+        alias($.stray_end_tag, $.end_tag),
         $.text,
       ),
 
@@ -292,29 +299,42 @@ export default grammar({
     void_tag_name: (_) => choice(...VOID_TAGS.map((name) => reserved(name))),
 
     // `<script src="..." />` and `<style />` close themselves in XHTML-era
-    // pages instead of opening a raw-text body.
+    // pages instead of opening a raw-text body. Other names go through the
+    // scanner's open-element stack, so their `/>` is the scanner's token.
     self_closing_element: ($) =>
-      seq(
-        '<',
-        field(
-          'name',
-          choice(
-            $.tag_name,
-            alias($.script_tag_name, $.tag_name),
-            alias($.style_tag_name, $.tag_name),
-          ),
+      choice(
+        seq(
+          '<',
+          field('name', $._tag_name),
+          repeat($._tag_item),
+          alias($._self_closing_delimiter, '/>'),
         ),
-        repeat($._tag_item),
-        '/>',
+        seq(
+          '<',
+          field(
+            'name',
+            choice(alias($.script_tag_name, $.tag_name), alias($.style_tag_name, $.tag_name)),
+          ),
+          repeat($._tag_item),
+          '/>',
+        ),
       ),
 
-    element: ($) => seq($.start_tag, repeat($._content), $.end_tag),
+    // An element ends at its end tag or, for HTML's optional end tags (`li`,
+    // `p`, `td`, `option`, and the rest), where the scanner finds it implied:
+    // at a sibling or other start tag that closes it, at an ancestor's end
+    // tag, or at the end of the file.
+    element: ($) => seq($.start_tag, repeat($._content), choice($.end_tag, $._implicit_end_tag)),
 
-    start_tag: ($) => seq('<', field('name', $.tag_name), repeat($._tag_item), '>'),
+    start_tag: ($) => seq('<', field('name', $._tag_name), repeat($._tag_item), '>'),
 
     // A nugget or server comment can stand in for an attribute, as in
     // `<option value="1" <%= selected ? "selected" : "" %>>`.
     _tag_item: ($) => choice($.attribute, $._nugget, $.server_comment),
+
+    // Start and end tag names come from the scanner, which keeps the stack of
+    // open elements that implied end tags are decided from.
+    _tag_name: ($) => alias($._start_tag_name, $.tag_name),
 
     end_tag: ($) =>
       seq(
@@ -325,13 +345,15 @@ export default grammar({
             alias($.script_tag_name, $.tag_name),
             alias($.style_tag_name, $.tag_name),
             alias($.void_tag_name, $.tag_name),
-            $.tag_name,
+            alias($._end_tag_name, $.tag_name),
           ),
         ),
         '>',
       ),
 
-    tag_name: ($) => $._name,
+    // An end tag that names no open element closes nothing, as a browser
+    // treats it, so `<p><table></table></p>` keeps its parent open.
+    stray_end_tag: ($) => seq('</', field('name', alias($._stray_end_tag_name, $.tag_name)), '>'),
 
     doctype: ($) => seq($.doctype_token, optional(alias(/[^>]+/, $.doctype_declaration)), '>'),
 
