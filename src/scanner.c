@@ -29,7 +29,8 @@ enum TokenType {
   SCRIPT_VB,
   STYLE_TEXT,
   EXPRESSION_TEXT,
-  HANDLER_TEXT,
+  HANDLER_CSHARP,
+  HANDLER_VB,
 };
 
 enum Language {
@@ -245,6 +246,58 @@ static bool ends_language_value(int32_t c) {
   return c == 0 || c == '"' || c == '\'' || c == '>' || is_space(c) || c > 127;
 }
 
+// True at a `<script` start tag name (followed by whitespace, `>`, or `/`)
+// or at `%--`, with the lexer just past the `<`.
+static bool at_handler_markup(TSLexer *lexer) {
+  if (lexer->lookahead == '%') {
+    lexer->advance(lexer, false);
+    if (lexer->lookahead != '-') {
+      return false;
+    }
+    lexer->advance(lexer, false);
+    return lexer->lookahead == '-';
+  }
+  if (!match_ci(lexer, "script")) {
+    return false;
+  }
+  return is_space(lexer->lookahead) || lexer->lookahead == '>' || lexer->lookahead == '/';
+}
+
+// The body of a WebHandler or WebService file is code up to EOF, except that
+// a line starting with `<script` or `<%--` (after optional indentation)
+// begins a script element or server comment. Leading whitespace is skipped,
+// so the code starts at its first non-space character.
+static bool scan_handler_code(TSLexer *lexer) {
+  while (is_space(lexer->lookahead)) {
+    lexer->advance(lexer, true);
+  }
+  bool has_content = false;
+  bool line_start = true;
+  while (lexer->lookahead != 0) {
+    int32_t c = lexer->lookahead;
+    if (c == '<' && line_start) {
+      lexer->mark_end(lexer);
+      lexer->advance(lexer, false);
+      if (at_handler_markup(lexer)) {
+        return has_content;
+      }
+      lexer->mark_end(lexer);
+      has_content = true;
+      line_start = false;
+      continue;
+    }
+    if (c == '\n') {
+      line_start = true;
+    } else if (c != ' ' && c != '\t' && c != '\r') {
+      line_start = false;
+    }
+    lexer->advance(lexer, false);
+    lexer->mark_end(lexer);
+    has_content = true;
+  }
+  return has_content;
+}
+
 static bool scan_language(TSLexer *lexer, Scanner *scanner, const bool *valid_symbols) {
   while (is_space(lexer->lookahead)) {
     lexer->advance(lexer, true);
@@ -323,10 +376,10 @@ bool tree_sitter_aspx_external_scanner_scan(void *payload, TSLexer *lexer, const
   }
 
   // During error recovery every external token is valid at once. No real
-  // parse state allows both a Language value and handler text, so that pair
+  // parse state allows both a Language value and handler code, so that pair
   // identifies recovery. Scanning then would turn arbitrary text into a
   // language value and could switch the language for the rest of the page.
-  if (valid_symbols[LANG_CSHARP] && valid_symbols[HANDLER_TEXT]) {
+  if (valid_symbols[LANG_CSHARP] && valid_symbols[HANDLER_CSHARP]) {
     return false;
   }
 
@@ -366,15 +419,12 @@ bool tree_sitter_aspx_external_scanner_scan(void *payload, TSLexer *lexer, const
     return true;
   }
 
-  if (valid_symbols[HANDLER_TEXT]) {
-    if (lexer->lookahead == 0) {
+  if (valid_symbols[HANDLER_CSHARP] || valid_symbols[HANDLER_VB]) {
+    enum TokenType symbol = scanner->language == LANGUAGE_VB ? HANDLER_VB : HANDLER_CSHARP;
+    if (!valid_symbols[symbol] || !scan_handler_code(lexer)) {
       return false;
     }
-    while (lexer->lookahead != 0) {
-      lexer->advance(lexer, false);
-    }
-    lexer->mark_end(lexer);
-    lexer->result_symbol = HANDLER_TEXT;
+    lexer->result_symbol = symbol;
     return true;
   }
 

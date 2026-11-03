@@ -71,7 +71,8 @@ export default grammar({
     $._script_vb,
     $.style_text,
     $.expression_text,
-    $.handler_text,
+    $._handler_csharp,
+    $._handler_vb,
   ],
 
   rules: {
@@ -86,8 +87,13 @@ export default grammar({
     handler_file: ($) =>
       seq(
         $.handler_directive,
-        repeat(choice($.server_comment, $.script_element, alias($.handler_text, $.handler_code))),
+        repeat(choice($.server_comment, $.script_element, $.handler_code)),
       ),
+
+    // The code of a handler file, labeled with the directive's language like
+    // nugget code so consumers count and inject it the same way.
+    handler_code: ($) =>
+      choice(alias($._handler_csharp, $.c_sharp_code), alias($._handler_vb, $.vb_code)),
 
     _top: ($) => choice($._content, $.end_tag),
 

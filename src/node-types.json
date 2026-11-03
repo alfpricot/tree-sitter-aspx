@@ -362,6 +362,25 @@
     }
   },
   {
+    "type": "handler_code",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "c_sharp_code",
+          "named": true
+        },
+        {
+          "type": "vb_code",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "handler_directive",
     "named": true,
     "fields": {
@@ -1013,10 +1032,6 @@
   },
   {
     "type": "expression_value",
-    "named": true
-  },
-  {
-    "type": "handler_code",
     "named": true
   },
   {

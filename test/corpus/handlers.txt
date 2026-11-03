@@ -21,7 +21,8 @@ public class Handler {
         (attribute_name)
         (quoted_attribute_value
           (attribute_value))))
-    (handler_code)))
+    (handler_code
+      (c_sharp_code))))
 
 ================================================================================
 web service script element
@@ -46,7 +47,16 @@ public class Service : System.Web.Services.WebService {
         (attribute_name)
         (quoted_attribute_value
           (attribute_value))))
-    (handler_code)))
+    (script_element
+      (start_tag
+        (tag_name)
+        (attribute
+          (attribute_name)
+          (quoted_attribute_value
+            (attribute_value))))
+      (c_sharp_code)
+      (end_tag
+        (tag_name)))))
 
 ================================================================================
 global application file
@@ -93,4 +103,68 @@ End Class
         (attribute_name)
         (quoted_attribute_value
           (attribute_value))))
-    (handler_code)))
+    (handler_code
+      (vb_code))))
+
+================================================================================
+server comment and script lines inside handler code
+================================================================================
+
+<%@ WebHandler Language="C#" Class="Example.Handler" %>
+using System.Web;
+  <%-- legacy handler --%>
+public class Handler { string tag = "<script>"; }
+  <script runat="server">
+  static int n;
+  </script>
+
+---
+
+(source_file
+  (handler_file
+    (handler_directive
+      (directive_name)
+      (language_attribute
+        (attribute_name)
+        (language_value))
+      (attribute
+        (attribute_name)
+        (quoted_attribute_value
+          (attribute_value))))
+    (handler_code
+      (c_sharp_code))
+    (server_comment
+      (server_comment_text))
+    (handler_code
+      (c_sharp_code))
+    (script_element
+      (start_tag
+        (tag_name)
+        (attribute
+          (attribute_name)
+          (quoted_attribute_value
+            (attribute_value))))
+      (c_sharp_code)
+      (end_tag
+        (tag_name)))))
+
+================================================================================
+handler directive with no code
+================================================================================
+
+<%@ WebHandler Language="C#" Class="Example.Handler" %>
+
+
+---
+
+(source_file
+  (handler_file
+    (handler_directive
+      (directive_name)
+      (language_attribute
+        (attribute_name)
+        (language_value))
+      (attribute
+        (attribute_name)
+        (quoted_attribute_value
+          (attribute_value))))))

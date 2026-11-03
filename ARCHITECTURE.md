@@ -18,7 +18,7 @@ The grammar definition in the tree-sitter DSL, and the source of truth for the p
 
 ### [src/](src)
 
-`parser.c`, `grammar.json`, and `node-types.json` are generated from `grammar.js` and committed; CI regenerates them and fails on any difference. `scanner.c` is hand-written and is the external scanner: it reads code, comment, style, and handler bodies up to their terminator (`%>`, `--%>`, `</script>`, `</style>`, or end of file), which tree-sitter's regular expressions cannot express, and it records the page `Language` value so later code is labeled C# or VB.NET.
+`parser.c`, `grammar.json`, and `node-types.json` are generated from `grammar.js` and committed; CI regenerates them and fails on any difference. `scanner.c` is hand-written and is the external scanner: it reads code, comment, style, and handler bodies up to their terminator (`%>`, `--%>`, `</script>`, `</style>`, a handler line that starts a `<script>` element or server comment, or end of file), which tree-sitter's regular expressions cannot express, and it records the page `Language` value so later code is labeled C# or VB.NET.
 
 ### [queries/](queries)
 
