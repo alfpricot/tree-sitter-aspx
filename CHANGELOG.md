@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.0.0 (2026-11-05)
+
+### Breaking Changes
+
+* **grammar:** read a bracket followed by whitespace as text (#37)
+* **grammar:** label server scripts by their own language and bound runat (#36)
+
+### Features
+
+* **grammar:** imply the end tags HTML lets a page omit (#35)
+* **grammar:** parse nuggets in script, style, and tag bodies (#32)
+
+### Bug Fixes
+
+* **queries:** match runat=server in any casing and test the queries (#34)
+* **grammar:** label handler code and parse its script elements (#33)
+* **grammar:** harden scanner recovery and Language detection (#31)
+* **ci:** cover C sources in the Windows check and drop dead release asset (#30)
+
 ## 0.1.3 (2026-10-29)
 
 ### Bug Fixes
