@@ -9,7 +9,7 @@ export function docsOnly(files) {
 
 export function needsWindowsBinding(files) {
   return files.some((path) =>
-    /^(?:bindings\/node\/|binding\.gyp$|package(?:-lock)?\.json$|\.github\/workflows\/verify\.yml$)/.test(
+    /^(?:bindings\/node\/|binding\.gyp$|package(?:-lock)?\.json$|src\/(?:scanner\.c$|parser\.c$|tree_sitter\/)|\.github\/workflows\/verify\.yml$)/.test(
       path,
     ),
   );
@@ -31,22 +31,6 @@ export function changedPaths(base, head, run = execFileSync) {
 // retarget always needs a full run regardless of `priorVerified`.
 export function canSkipEditedBuild(event, priorVerified) {
   return event.action === 'edited' && !event.changes?.base && priorVerified;
-}
-
-export function versionsAgree(cargoToml, packageJson, treeSitterJson) {
-  const cargoVersion = cargoToml.match(/^version\s*=\s*"([^"]+)"\s*$/m)?.[1];
-  const npmVersion = JSON.parse(packageJson).version;
-  const treeSitterVersion = JSON.parse(treeSitterJson).metadata?.version;
-  assert.equal(
-    npmVersion,
-    cargoVersion,
-    `package.json version "${npmVersion}" must match Cargo.toml version "${cargoVersion}"`,
-  );
-  assert.equal(
-    treeSitterVersion,
-    cargoVersion,
-    `tree-sitter.json metadata.version "${treeSitterVersion}" must match Cargo.toml version "${cargoVersion}"`,
-  );
 }
 
 export function verifyResults(needs, event, draft) {
@@ -85,11 +69,4 @@ if (process.argv[2] === 'changes') {
     process.env.GITHUB_EVENT_NAME,
     process.env.IS_DRAFT === 'true',
   );
-} else if (process.argv[2] === 'versions') {
-  versionsAgree(
-    readFileSync('Cargo.toml', 'utf8'),
-    readFileSync('package.json', 'utf8'),
-    readFileSync('tree-sitter.json', 'utf8'),
-  );
-  console.log('package.json and tree-sitter.json versions match Cargo.toml');
 }

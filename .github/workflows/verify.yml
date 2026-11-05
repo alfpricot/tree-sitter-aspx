@@ -141,7 +141,7 @@ jobs:
       - name: Check Cargo.toml, package.json, and tree-sitter.json agree
         # gala refuses to plan a release when they disagree; failing here
         # catches the drift on the pull request instead of on main.
-        run: node tools/ci-policy.mjs versions
+        run: node tools/release-policy.mjs versions
 
       - name: Validate YAML files
         run: |

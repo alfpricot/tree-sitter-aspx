@@ -85,3 +85,440 @@ text inside a server control
       (text)
       (end_tag
         (tag_name)))))
+
+================================================================================
+nuggets and server comments in a tag
+================================================================================
+
+<option value="1" <%= sel ? "selected" : "" %>>One</option>
+<input type="checkbox" <% if (on) { %>checked<% } %> <%-- note --%> />
+
+---
+
+(source_file
+  (document
+    (element
+      (start_tag
+        (tag_name)
+        (attribute
+          (attribute_name)
+          (quoted_attribute_value
+            (attribute_value)))
+        (output_expression
+          (c_sharp_code)))
+      (text)
+      (end_tag
+        (tag_name)))
+    (void_element
+      (tag_name)
+      (attribute
+        (attribute_name)
+        (quoted_attribute_value
+          (attribute_value)))
+      (statement_block
+        (c_sharp_code))
+      (attribute
+        (attribute_name))
+      (statement_block
+        (c_sharp_code))
+      (server_comment
+        (server_comment_text)))))
+
+================================================================================
+xml declaration and cdata section
+================================================================================
+
+<?xml version="1.0" encoding="utf-8"?>
+<data><![CDATA[ a ] b ]] c <x> ]]></data>
+
+---
+
+(source_file
+  (document
+    (processing_instruction
+      (text))
+    (element
+      (start_tag
+        (tag_name))
+      (cdata_section
+        (text)
+        (text)
+        (text)
+        (text)
+        (text)
+        (text)
+        (text)
+        (text))
+      (end_tag
+        (tag_name)))))
+
+================================================================================
+nuggets inside cdata and an xml declaration
+================================================================================
+
+<?xml version="1.0" encoding="<%= Enc %>"?>
+<rss><![CDATA[<%# Eval("Body") %>]]></rss>
+
+---
+
+(source_file
+  (document
+    (processing_instruction
+      (text)
+      (output_expression
+        (c_sharp_code))
+      (text))
+    (element
+      (start_tag
+        (tag_name))
+      (cdata_section
+        (binding_expression
+          (c_sharp_code)))
+      (end_tag
+        (tag_name)))))
+
+================================================================================
+omitted end tags in lists and paragraphs
+================================================================================
+
+<ul>
+  <li>One
+  <li>Two <%= Count %>
+</ul>
+<p>First
+<p>Second
+<div>block</div>
+
+---
+
+(source_file
+  (document
+    (element
+      (start_tag
+        (tag_name))
+      (element
+        (start_tag
+          (tag_name))
+        (text))
+      (element
+        (start_tag
+          (tag_name))
+        (text)
+        (output_expression
+          (c_sharp_code)))
+      (end_tag
+        (tag_name)))
+    (element
+      (start_tag
+        (tag_name))
+      (text))
+    (element
+      (start_tag
+        (tag_name))
+      (text))
+    (element
+      (start_tag
+        (tag_name))
+      (text)
+      (end_tag
+        (tag_name)))))
+
+================================================================================
+omitted end tags in tables, selects, and definition lists
+================================================================================
+
+<table>
+  <tr><td>a<td>b
+  <tr><td>c
+</table>
+<select><option>1<option>2</select>
+<dl><dt>t<dd>d</dl>
+
+---
+
+(source_file
+  (document
+    (element
+      (start_tag
+        (tag_name))
+      (element
+        (start_tag
+          (tag_name))
+        (element
+          (start_tag
+            (tag_name))
+          (text))
+        (element
+          (start_tag
+            (tag_name))
+          (text)))
+      (element
+        (start_tag
+          (tag_name))
+        (element
+          (start_tag
+            (tag_name))
+          (text)))
+      (end_tag
+        (tag_name)))
+    (element
+      (start_tag
+        (tag_name))
+      (element
+        (start_tag
+          (tag_name))
+        (text))
+      (element
+        (start_tag
+          (tag_name))
+        (text))
+      (end_tag
+        (tag_name)))
+    (element
+      (start_tag
+        (tag_name))
+      (element
+        (start_tag
+          (tag_name))
+        (text))
+      (element
+        (start_tag
+          (tag_name))
+        (text))
+      (end_tag
+        (tag_name)))))
+
+================================================================================
+open elements close at the end of the file
+================================================================================
+
+<div><span>unclosed
+
+---
+
+(source_file
+  (document
+    (element
+      (start_tag
+        (tag_name))
+      (element
+        (start_tag
+          (tag_name))
+        (text)))))
+
+================================================================================
+end tag for an outer element closes inner ones and a stray end tag closes nothing
+================================================================================
+
+<div><span><b>x</div>
+<asp:Panel>y</ASP:PANEL>
+<em>z</strong>
+
+---
+
+(source_file
+  (document
+    (element
+      (start_tag
+        (tag_name))
+      (element
+        (start_tag
+          (tag_name))
+        (element
+          (start_tag
+            (tag_name))
+          (text)))
+      (end_tag
+        (tag_name)))
+    (element
+      (start_tag
+        (tag_name))
+      (text)
+      (end_tag
+        (tag_name)))
+    (element
+      (start_tag
+        (tag_name))
+      (text)
+      (end_tag
+        (tag_name)))))
+
+================================================================================
+a stray end tag after an implied close keeps the parent open
+================================================================================
+
+<div><p><table><tr><td>x</td></tr></table></p></div>
+
+---
+
+(source_file
+  (document
+    (element
+      (start_tag
+        (tag_name))
+      (element
+        (start_tag
+          (tag_name)))
+      (element
+        (start_tag
+          (tag_name))
+        (element
+          (start_tag
+            (tag_name))
+          (element
+            (start_tag
+              (tag_name))
+            (text)
+            (end_tag
+              (tag_name)))
+          (end_tag
+            (tag_name)))
+        (end_tag
+          (tag_name)))
+      (end_tag
+        (tag_name))
+      (end_tag
+        (tag_name)))))
+
+================================================================================
+items and cells close through inner paragraphs and inline elements
+================================================================================
+
+<ul><li><p>One<li><span>Two</ul>
+<table><tr><td><p>a<td>b</table>
+<p>x<li>y
+
+---
+
+(source_file
+  (document
+    (element
+      (start_tag
+        (tag_name))
+      (element
+        (start_tag
+          (tag_name))
+        (element
+          (start_tag
+            (tag_name))
+          (text)))
+      (element
+        (start_tag
+          (tag_name))
+        (element
+          (start_tag
+            (tag_name))
+          (text)))
+      (end_tag
+        (tag_name)))
+    (element
+      (start_tag
+        (tag_name))
+      (element
+        (start_tag
+          (tag_name))
+        (element
+          (start_tag
+            (tag_name))
+          (element
+            (start_tag
+              (tag_name))
+            (text)))
+        (element
+          (start_tag
+            (tag_name))
+          (text)))
+      (end_tag
+        (tag_name)))
+    (element
+      (start_tag
+        (tag_name))
+      (text))
+    (element
+      (start_tag
+        (tag_name))
+      (text))))
+
+================================================================================
+whitespace inside end tags
+================================================================================
+
+<ul><li>a</ ul><p>b
+
+---
+
+(source_file
+  (document
+    (element
+      (start_tag
+        (tag_name))
+      (element
+        (start_tag
+          (tag_name))
+        (text))
+      (end_tag
+        (tag_name)))
+    (element
+      (start_tag
+        (tag_name))
+      (text))))
+
+================================================================================
+a bracket followed by whitespace is text
+================================================================================
+
+<p>if a < b and c > d</p>
+<ul><li>a < li>b</ul>
+< div>x</div>
+
+---
+
+(source_file
+  (document
+    (element
+      (start_tag
+        (tag_name))
+      (text)
+      (text)
+      (end_tag
+        (tag_name)))
+    (element
+      (start_tag
+        (tag_name))
+      (element
+        (start_tag
+          (tag_name))
+        (text)
+        (text))
+      (end_tag
+        (tag_name)))
+    (text)
+    (end_tag
+      (tag_name))))
+
+================================================================================
+a malformed start tag keeps later elements in step
+================================================================================
+
+<section><div <b>x</b></section><p>after
+
+---
+
+(source_file
+  (document
+    (element
+      (start_tag
+        (tag_name))
+      (element
+        (start_tag
+          (tag_name)
+          (ERROR))
+        (text)
+        (end_tag
+          (tag_name)))
+      (end_tag
+        (tag_name)))
+    (element
+      (start_tag
+        (tag_name))
+      (text))))

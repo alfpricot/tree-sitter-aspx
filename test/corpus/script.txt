@@ -63,3 +63,278 @@ server script follows the page language
       (vb_code)
       (end_tag
         (tag_name)))))
+
+================================================================================
+nuggets inside script and style bodies
+================================================================================
+
+<script type="text/javascript">
+  var id = '<%= Ctl.ClientID %>';
+  <%-- hidden --%>
+</script>
+<style>
+  .a { color: <%: Color %>; }
+</style>
+
+---
+
+(source_file
+  (document
+    (script_element
+      (start_tag
+        (tag_name)
+        (attribute
+          (attribute_name)
+          (quoted_attribute_value
+            (attribute_value))))
+      (c_sharp_code)
+      (output_expression
+        (c_sharp_code))
+      (c_sharp_code)
+      (server_comment
+        (server_comment_text))
+      (c_sharp_code)
+      (end_tag
+        (tag_name)))
+    (style_element
+      (start_tag
+        (tag_name))
+      (style_text)
+      (encoded_expression
+        (c_sharp_code))
+      (style_text)
+      (end_tag
+        (tag_name)))))
+
+================================================================================
+script body that starts with a nugget
+================================================================================
+
+<script><% Response.Write("x"); %></script>
+
+---
+
+(source_file
+  (document
+    (script_element
+      (start_tag
+        (tag_name))
+      (statement_block
+        (c_sharp_code))
+      (end_tag
+        (tag_name)))))
+
+================================================================================
+self-closing script and style tags
+================================================================================
+
+<script src="a.js" />
+<style />
+<p>after</p>
+
+---
+
+(source_file
+  (document
+    (self_closing_element
+      (tag_name)
+      (attribute
+        (attribute_name)
+        (quoted_attribute_value
+          (attribute_value))))
+    (self_closing_element
+      (tag_name))
+    (element
+      (start_tag
+        (tag_name))
+      (text)
+      (end_tag
+        (tag_name)))))
+
+================================================================================
+unclosed nugget opener inside a server script is code
+================================================================================
+
+<script runat="server">
+  string open = "<%";
+</script>
+<p>after</p>
+
+---
+
+(source_file
+  (document
+    (script_element
+      (start_tag
+        (tag_name)
+        (attribute
+          (attribute_name)
+          (quoted_attribute_value
+            (attribute_value))))
+      (c_sharp_code)
+      (c_sharp_code)
+      (end_tag
+        (tag_name)))
+    (element
+      (start_tag
+        (tag_name))
+      (text)
+      (end_tag
+        (tag_name)))))
+
+================================================================================
+directive inside a script body
+================================================================================
+
+<script>a<%@ Import Namespace="System.Data" %>b</script>
+
+---
+
+(source_file
+  (document
+    (script_element
+      (start_tag
+        (tag_name))
+      (c_sharp_code)
+      (directive
+        (directive_name)
+        (attribute
+          (attribute_name)
+          (quoted_attribute_value
+            (attribute_value))))
+      (c_sharp_code)
+      (end_tag
+        (tag_name)))))
+
+================================================================================
+end tags in any casing with whitespace before the bracket
+================================================================================
+
+<script>a</SCRIPT >
+<style>b</Style
+>
+
+---
+
+(source_file
+  (document
+    (script_element
+      (start_tag
+        (tag_name))
+      (c_sharp_code)
+      (end_tag
+        (tag_name)))
+    (style_element
+      (start_tag
+        (tag_name))
+      (style_text)
+      (end_tag
+        (tag_name)))))
+
+================================================================================
+unclosed nugget opener at the end of a script body
+================================================================================
+
+<script>a<%
+
+---
+
+(source_file
+  (ERROR
+    (start_tag
+      (tag_name))
+    (c_sharp_code)
+    (c_sharp_code)))
+
+================================================================================
+a server script names the page language when no directive does
+================================================================================
+
+<%@ Control %>
+<script runat="server" language="VB">
+  Sub A()
+  End Sub
+</script>
+<% Dim x %>
+
+---
+
+(source_file
+  (document
+    (directive
+      (directive_name))
+    (script_element
+      (start_tag
+        (tag_name)
+        (attribute
+          (attribute_name)
+          (quoted_attribute_value
+            (attribute_value)))
+        (attribute
+          (attribute_name)
+          (quoted_attribute_value
+            (attribute_value))))
+      (vb_code)
+      (end_tag
+        (tag_name)))
+    (statement_block
+      (vb_code))))
+
+================================================================================
+a client script's language does not change the page language
+================================================================================
+
+<script language="VBScript">MsgBox 1</script>
+<% int x; %>
+
+---
+
+(source_file
+  (document
+    (script_element
+      (start_tag
+        (tag_name)
+        (attribute
+          (attribute_name)
+          (quoted_attribute_value
+            (attribute_value))))
+      (c_sharp_code)
+      (end_tag
+        (tag_name)))
+    (statement_block
+      (c_sharp_code))))
+
+================================================================================
+nuggets and server comments in a script start tag are skipped
+================================================================================
+
+<script <%-- note --%> id="<%= "s" %>" runat="server" language="VB">x</script>
+<% Dim y %>
+
+---
+
+(source_file
+  (document
+    (script_element
+      (start_tag
+        (tag_name)
+        (server_comment
+          (server_comment_text))
+        (attribute
+          (attribute_name)
+          (quoted_attribute_value
+            (output_expression
+              (vb_code))))
+        (attribute
+          (attribute_name)
+          (quoted_attribute_value
+            (attribute_value)))
+        (attribute
+          (attribute_name)
+          (quoted_attribute_value
+            (attribute_value))))
+      (vb_code)
+      (end_tag
+        (tag_name)))
+    (statement_block
+      (vb_code))))

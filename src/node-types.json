@@ -49,6 +49,45 @@
     }
   },
   {
+    "type": "cdata_section",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "binding_expression",
+          "named": true
+        },
+        {
+          "type": "encoded_expression",
+          "named": true
+        },
+        {
+          "type": "expression_builder",
+          "named": true
+        },
+        {
+          "type": "output_expression",
+          "named": true
+        },
+        {
+          "type": "server_comment",
+          "named": true
+        },
+        {
+          "type": "statement_block",
+          "named": true
+        },
+        {
+          "type": "text",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "directive",
     "named": true,
     "fields": {
@@ -115,6 +154,10 @@
           "named": true
         },
         {
+          "type": "cdata_section",
+          "named": true
+        },
+        {
           "type": "directive",
           "named": true
         },
@@ -144,6 +187,10 @@
         },
         {
           "type": "output_expression",
+          "named": true
+        },
+        {
+          "type": "processing_instruction",
           "named": true
         },
         {
@@ -190,6 +237,10 @@
           "named": true
         },
         {
+          "type": "cdata_section",
+          "named": true
+        },
+        {
           "type": "directive",
           "named": true
         },
@@ -219,6 +270,10 @@
         },
         {
           "type": "output_expression",
+          "named": true
+        },
+        {
+          "type": "processing_instruction",
           "named": true
         },
         {
@@ -307,6 +362,25 @@
     }
   },
   {
+    "type": "handler_code",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "c_sharp_code",
+          "named": true
+        },
+        {
+          "type": "vb_code",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "handler_directive",
     "named": true,
     "fields": {
@@ -344,6 +418,10 @@
       "multiple": true,
       "required": true,
       "types": [
+        {
+          "type": "directive",
+          "named": true
+        },
         {
           "type": "handler_code",
           "named": true
@@ -422,7 +500,7 @@
       },
       "value": {
         "multiple": false,
-        "required": true,
+        "required": false,
         "types": [
           {
             "type": "language_value",
@@ -446,6 +524,45 @@
         },
         {
           "type": "vb_code",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "processing_instruction",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "binding_expression",
+          "named": true
+        },
+        {
+          "type": "encoded_expression",
+          "named": true
+        },
+        {
+          "type": "expression_builder",
+          "named": true
+        },
+        {
+          "type": "output_expression",
+          "named": true
+        },
+        {
+          "type": "server_comment",
+          "named": true
+        },
+        {
+          "type": "statement_block",
+          "named": true
+        },
+        {
+          "type": "text",
           "named": true
         }
       ]
@@ -499,7 +616,19 @@
       "required": true,
       "types": [
         {
+          "type": "binding_expression",
+          "named": true
+        },
+        {
           "type": "c_sharp_code",
+          "named": true
+        },
+        {
+          "type": "directive",
+          "named": true
+        },
+        {
+          "type": "encoded_expression",
           "named": true
         },
         {
@@ -507,7 +636,23 @@
           "named": true
         },
         {
+          "type": "expression_builder",
+          "named": true
+        },
+        {
+          "type": "output_expression",
+          "named": true
+        },
+        {
+          "type": "server_comment",
+          "named": true
+        },
+        {
           "type": "start_tag",
+          "named": true
+        },
+        {
+          "type": "statement_block",
           "named": true
         },
         {
@@ -541,7 +686,27 @@
           "named": true
         },
         {
-          "type": "language_attribute",
+          "type": "binding_expression",
+          "named": true
+        },
+        {
+          "type": "encoded_expression",
+          "named": true
+        },
+        {
+          "type": "expression_builder",
+          "named": true
+        },
+        {
+          "type": "output_expression",
+          "named": true
+        },
+        {
+          "type": "server_comment",
+          "named": true
+        },
+        {
+          "type": "statement_block",
           "named": true
         }
       ]
@@ -606,7 +771,27 @@
           "named": true
         },
         {
-          "type": "language_attribute",
+          "type": "binding_expression",
+          "named": true
+        },
+        {
+          "type": "encoded_expression",
+          "named": true
+        },
+        {
+          "type": "expression_builder",
+          "named": true
+        },
+        {
+          "type": "output_expression",
+          "named": true
+        },
+        {
+          "type": "server_comment",
+          "named": true
+        },
+        {
+          "type": "statement_block",
           "named": true
         }
       ]
@@ -640,11 +825,39 @@
       "required": true,
       "types": [
         {
+          "type": "binding_expression",
+          "named": true
+        },
+        {
+          "type": "directive",
+          "named": true
+        },
+        {
+          "type": "encoded_expression",
+          "named": true
+        },
+        {
           "type": "end_tag",
           "named": true
         },
         {
+          "type": "expression_builder",
+          "named": true
+        },
+        {
+          "type": "output_expression",
+          "named": true
+        },
+        {
+          "type": "server_comment",
+          "named": true
+        },
+        {
           "type": "start_tag",
+          "named": true
+        },
+        {
+          "type": "statement_block",
           "named": true
         },
         {
@@ -683,7 +896,27 @@
           "named": true
         },
         {
-          "type": "language_attribute",
+          "type": "binding_expression",
+          "named": true
+        },
+        {
+          "type": "encoded_expression",
+          "named": true
+        },
+        {
+          "type": "expression_builder",
+          "named": true
+        },
+        {
+          "type": "output_expression",
+          "named": true
+        },
+        {
+          "type": "server_comment",
+          "named": true
+        },
+        {
+          "type": "statement_block",
           "named": true
         }
       ]
@@ -722,6 +955,10 @@
     "named": false
   },
   {
+    "type": "<![CDATA[",
+    "named": false
+  },
+  {
     "type": "<%",
     "named": false
   },
@@ -754,6 +991,10 @@
     "named": false
   },
   {
+    "type": "<?",
+    "named": false
+  },
+  {
     "type": "=",
     "named": false
   },
@@ -762,19 +1003,11 @@
     "named": false
   },
   {
-    "type": "WEBHANDLER",
+    "type": "?>",
     "named": false
   },
   {
-    "type": "WEBSERVICE",
-    "named": false
-  },
-  {
-    "type": "WebHandler",
-    "named": false
-  },
-  {
-    "type": "WebService",
+    "type": "]]>",
     "named": false
   },
   {
@@ -806,10 +1039,6 @@
     "named": true
   },
   {
-    "type": "handler_code",
-    "named": true
-  },
-  {
     "type": "language_value",
     "named": true
   },
@@ -828,13 +1057,5 @@
   {
     "type": "vb_code",
     "named": true
-  },
-  {
-    "type": "webhandler",
-    "named": false
-  },
-  {
-    "type": "webservice",
-    "named": false
   }
 ]

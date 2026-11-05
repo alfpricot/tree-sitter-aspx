@@ -9,9 +9,22 @@
 ;
 ; A <script> body uses the same code node. Without runat="server" the body
 ; is client script, so the query below replaces the page language with
-; JavaScript. With runat="server" the page language stands.
+; JavaScript. With runat="server" the page language, or the script's own
+; language attribute, stands. ASP.NET compares the value without regard to
+; case and accepts it unquoted, so runat=SERVER and runat=server count too.
+; The pattern needs whitespace before runat and a non-name character after
+; server, so text such as src="x.ashx?runat=server" or runat="serverless"
+; does not match. It uses only syntax that Rust, ECMAScript, and Vim regex
+; read the same way.
 ; Expression builders (`<%$ ... %>`) are not C# or VB and are not injected.
 ; <style> bodies inject as CSS.
+;
+; A nugget inside a <script> or <style> body splits the body into several
+; code or style_text chunks. Those patterns set injection.combined so the
+; chunks are parsed together with the nuggets left out; the nuggets
+; themselves are injected by the patterns above. Combined injection joins
+; every match of a pattern in the page, so all client script bodies form one
+; JavaScript document, and likewise for server scripts and styles.
 
 ((statement_block
    (c_sharp_code) @injection.content)
@@ -47,24 +60,40 @@
    (vb_code) @injection.content)
  (#set! injection.language "vb"))
 
+; Handler files (.ashx, .asmx) are a directive plus code. The code pieces
+; between any <script> elements and server comments form one document.
+((handler_code
+   (c_sharp_code) @injection.content)
+ (#set! injection.language "c_sharp")
+ (#set! injection.combined))
+
+((handler_code
+   (vb_code) @injection.content)
+ (#set! injection.language "vb")
+ (#set! injection.combined))
+
 ((script_element
    (start_tag) @_tag
    (c_sharp_code) @injection.content)
- (#match? @_tag "[Rr][Uu][Nn][Aa][Tt]\\s*=\\s*[\"'][Ss]erver")
- (#set! injection.language "c_sharp"))
+ (#match? @_tag "\\s[Rr][Uu][Nn][Aa][Tt]\\s*=\\s*[\"']*[Ss][Ee][Rr][Vv][Ee][Rr][^A-Za-z0-9_:.-]")
+ (#set! injection.language "c_sharp")
+ (#set! injection.combined))
 
 ((script_element
    (start_tag) @_tag
    (vb_code) @injection.content)
- (#match? @_tag "[Rr][Uu][Nn][Aa][Tt]\\s*=\\s*[\"'][Ss]erver")
- (#set! injection.language "vb"))
+ (#match? @_tag "\\s[Rr][Uu][Nn][Aa][Tt]\\s*=\\s*[\"']*[Ss][Ee][Rr][Vv][Ee][Rr][^A-Za-z0-9_:.-]")
+ (#set! injection.language "vb")
+ (#set! injection.combined))
 
 ((script_element
    (start_tag) @_tag
    [(c_sharp_code) (vb_code)] @injection.content)
- (#not-match? @_tag "[Rr][Uu][Nn][Aa][Tt]\\s*=\\s*[\"'][Ss]erver")
- (#set! injection.language "javascript"))
+ (#not-match? @_tag "\\s[Rr][Uu][Nn][Aa][Tt]\\s*=\\s*[\"']*[Ss][Ee][Rr][Vv][Ee][Rr][^A-Za-z0-9_:.-]")
+ (#set! injection.language "javascript")
+ (#set! injection.combined))
 
 ((style_element
    (style_text) @injection.content)
- (#set! injection.language "css"))
+ (#set! injection.language "css")
+ (#set! injection.combined))

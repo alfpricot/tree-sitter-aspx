@@ -6,7 +6,7 @@ The grammar is written once in `grammar.js`. The tree-sitter CLI generates a C p
 
 ## What tree-sitter-aspx is not
 
-- It is not an HTML validator. Tags are parsed structurally; an end tag closes the nearest open element whether or not the names match.
+- It is not an HTML validator. Tags are parsed structurally: the scanner keeps a stack of open elements, implies the end tags HTML lets a page omit, closes everything still open at the end of the file, and leaves an end tag whose name matches no open element in place without closing anything.
 - It is not a C# or VB.NET parser. Code inside a page is exposed as opaque `c_sharp_code` and `vb_code` ranges for a host to inject a real grammar into.
 - It does not cover Classic ASP, Razor, or code-behind files (`.aspx.cs`, `.aspx.vb`).
 
@@ -18,7 +18,7 @@ The grammar definition in the tree-sitter DSL, and the source of truth for the p
 
 ### [src/](src)
 
-`parser.c`, `grammar.json`, and `node-types.json` are generated from `grammar.js` and committed; CI regenerates them and fails on any difference. `scanner.c` is hand-written and is the external scanner: it reads code, comment, style, and handler bodies up to their terminator (`%>`, `--%>`, `</script>`, `</style>`, or end of file), which tree-sitter's regular expressions cannot express, and it records the page `Language` value so later code is labeled C# or VB.NET.
+`parser.c`, `grammar.json`, and `node-types.json` are generated from `grammar.js` and committed; CI regenerates them and fails on any difference. `scanner.c` is hand-written and is the external scanner: it reads code, comment, style, and handler bodies up to their terminator (`%>`, `--%>`, `</script>`, `</style>`, a handler line that starts a directive, a server comment, or a server `<script>` element, or end of file), which tree-sitter's regular expressions cannot express, it records the page `Language` value so later code is labeled C# or VB.NET, and it keeps the stack of open elements that implied end tags are decided from.
 
 ### [queries/](queries)
 
@@ -38,7 +38,7 @@ The `tree-sitter-aspx` crate. `build.rs` compiles the committed C sources with t
 
 ### [tools/](tools)
 
-Node scripts that CI and contributors run: `node-kinds.mjs` (node-kind snapshot), `fixture-check.mjs` and `corpus-check.mjs` (parse checks, the latter decoding UTF-16 pages), `fixture-leak-grep.mjs` (rejects connection-string shapes), `package-check.mjs` (published package contents), and `ci-policy.mjs` and `release-policy.mjs` with their tests (what CI must run and which release tags are valid).
+Node scripts that CI and contributors run: `node-kinds.mjs` (node-kind snapshot), `fixture-check.mjs` and `corpus-check.mjs` (parse checks, the latter decoding UTF-16 pages through `web-forms-encoding.mjs`), `fixture-leak-grep.mjs` (rejects connection-string shapes), `package-check.mjs` (published package contents), and `ci-policy.mjs` and `release-policy.mjs` with their tests (what CI must run and which release tags are valid).
 
 ## External systems and data flow
 
@@ -48,7 +48,7 @@ The build and release process touches these services:
 
 - **crates.io** receives the Rust crate.
 - **npm** receives the Node package; **GitHub Packages** receives a copy scoped to the repository owner, because GitHub Packages requires the scope to match the owner.
-- **GitHub Releases** receives a WASM build for `web-tree-sitter` consumers, plus `test/node-kinds.txt` and `versions.json` as the node-kind stability record.
+- **GitHub Releases** receives a WASM build for `web-tree-sitter` consumers, plus `test/node-kinds.txt` as the node-kind stability record.
 
 ## Build, test, release, and deploy
 

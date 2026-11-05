@@ -56,8 +56,9 @@ export default grammar({
 
   // Reserved names (`col`, `script`, `Language`, `WebHandler`) must not match
   // a prefix of a longer name (`Columns`, `asp:ScriptManager`). Keywords are
-  // recognized only against this word token, so directive names and tag names
-  // both alias it.
+  // recognized only against this word token, which directive names use. Other
+  // tag names come from the scanner, which reads the whole name and leaves
+  // the reserved ones to the grammar.
   word: ($) => $._name,
 
   externals: ($) => [
@@ -71,7 +72,14 @@ export default grammar({
     $._script_vb,
     $.style_text,
     $.expression_text,
-    $.handler_text,
+    $._handler_csharp,
+    $._handler_vb,
+    $._start_tag_name,
+    $._end_tag_name,
+    $._implicit_end_tag,
+    $._self_closing_delimiter,
+    $._stray_end_tag_name,
+    $._script_tag_probe,
   ],
 
   rules: {
@@ -86,8 +94,13 @@ export default grammar({
     handler_file: ($) =>
       seq(
         $.handler_directive,
-        repeat(choice($.server_comment, $.script_element, alias($.handler_text, $.handler_code))),
+        repeat(choice($.directive, $.server_comment, $.script_element, $.handler_code)),
       ),
+
+    // The code of a handler file, labeled with the directive's language like
+    // nugget code so consumers count and inject it the same way.
+    handler_code: ($) =>
+      choice(alias($._handler_csharp, $.c_sharp_code), alias($._handler_vb, $.vb_code)),
 
     _top: ($) => choice($._content, $.end_tag),
 
@@ -103,33 +116,40 @@ export default grammar({
         $.self_closing_element,
         $.element,
         $.doctype,
+        $.cdata_section,
+        $.processing_instruction,
+        alias($.stray_end_tag, $.end_tag),
         $.text,
       ),
 
-    directive: ($) => seq('<%@', field('name', $.directive_name), repeat($._attribute), '%>'),
+    directive: ($) =>
+      seq('<%@', field('name', $.directive_name), repeat($._directive_attribute), '%>'),
 
     handler_directive: ($) =>
       seq(
         '<%@',
         field('name', alias(choice($.web_handler_name, $.web_service_name), $.directive_name)),
-        repeat($._attribute),
+        repeat($._directive_attribute),
         '%>',
       ),
 
     _name: (_) => /[A-Za-z_][A-Za-z0-9_.:-]*/,
     directive_name: ($) => $._name,
-    web_handler_name: (_) => choice('WebHandler', 'webhandler', 'WEBHANDLER'),
-    web_service_name: (_) => choice('WebService', 'webservice', 'WEBSERVICE'),
+    web_handler_name: (_) => reserved('WebHandler'),
+    web_service_name: (_) => reserved('WebService'),
 
     // `Language` is its own attribute so the value is a language_value node
-    // and the scanner can record C# vs VB for later code tokens.
+    // and the scanner can record C# vs VB for later code tokens. On an
+    // element it is an ordinary attribute; the scanner reads a server
+    // script's `language` itself, before the attributes are parsed.
     language_attribute: ($) =>
       seq(
         field('name', alias($.language_name, $.attribute_name)),
         '=',
         choice(
-          seq('"', field('value', $._language_value), '"'),
-          seq("'", field('value', $._language_value), "'"),
+          seq('"', optional(field('value', $._language_value)), '"'),
+          seq("'", optional(field('value', $._language_value)), "'"),
+          field('value', $._language_value),
         ),
       ),
 
@@ -138,7 +158,7 @@ export default grammar({
     _language_value: ($) =>
       alias(choice($._lang_csharp, $._lang_vb, $._lang_other), $.language_value),
 
-    _attribute: ($) => choice($.language_attribute, $.attribute),
+    _directive_attribute: ($) => choice($.language_attribute, $.attribute),
 
     attribute: ($) =>
       seq(
@@ -185,7 +205,10 @@ export default grammar({
 
     unquoted_attribute_value: (_) => /[^"'=<>\s`]+/,
 
-    server_comment: ($) => seq('<%--', optional($.server_comment_text), '--%>'),
+    // Any run of two or more dashes before `%>` closes the comment, as in
+    // `<%-- note ---%>`; the scanner stops the text before that run.
+    server_comment: ($) =>
+      seq('<%--', optional($.server_comment_text), alias(token(/-*--%>/), '--%>')),
 
     // Nuggets inside an HTML comment still execute, so they stay real nodes.
     html_comment: ($) =>
@@ -226,15 +249,36 @@ export default grammar({
     expression_builder: ($) =>
       seq('<%$', optional(alias($.expression_text, $.expression_value)), '%>'),
 
+    // Script and style bodies are raw text up to their end tag, except that
+    // nuggets, server comments, and directives inside them are still parsed. A body
+    // split by a nugget is several code or style_text chunks; the injection
+    // query combines them.
     script_element: ($) =>
       seq(
         alias($.script_start_tag, $.start_tag),
-        optional(choice(alias($._script_csharp, $.c_sharp_code), alias($._script_vb, $.vb_code))),
+        repeat(
+          choice(
+            alias($._script_csharp, $.c_sharp_code),
+            alias($._script_vb, $.vb_code),
+            $._nugget,
+            $.server_comment,
+            $.directive,
+          ),
+        ),
         alias($.script_end_tag, $.end_tag),
       ),
 
+    // The probe is a zero-width scanner token that reads the tag's `runat`
+    // and `language` ahead of the grammar, so a server script's body is
+    // labeled with its own language.
     script_start_tag: ($) =>
-      seq('<', field('name', alias($.script_tag_name, $.tag_name)), repeat($._attribute), '>'),
+      seq(
+        '<',
+        field('name', alias($.script_tag_name, $.tag_name)),
+        $._script_tag_probe,
+        repeat($._tag_item),
+        '>',
+      ),
 
     script_end_tag: ($) => seq('</', field('name', alias($.script_tag_name, $.tag_name)), '>'),
 
@@ -243,12 +287,12 @@ export default grammar({
     style_element: ($) =>
       seq(
         alias($.style_start_tag, $.start_tag),
-        optional($.style_text),
+        repeat(choice($.style_text, $._nugget, $.server_comment, $.directive)),
         alias($.style_end_tag, $.end_tag),
       ),
 
     style_start_tag: ($) =>
-      seq('<', field('name', alias($.style_tag_name, $.tag_name)), repeat($._attribute), '>'),
+      seq('<', field('name', alias($.style_tag_name, $.tag_name)), repeat($._tag_item), '>'),
 
     style_end_tag: ($) => seq('</', field('name', alias($.style_tag_name, $.tag_name)), '>'),
 
@@ -258,17 +302,48 @@ export default grammar({
       seq(
         '<',
         field('name', alias($.void_tag_name, $.tag_name)),
-        repeat($._attribute),
+        repeat($._tag_item),
         choice('/>', '>'),
       ),
 
     void_tag_name: (_) => choice(...VOID_TAGS.map((name) => reserved(name))),
 
-    self_closing_element: ($) => seq('<', field('name', $.tag_name), repeat($._attribute), '/>'),
+    // `<script src="..." />` and `<style />` close themselves in XHTML-era
+    // pages instead of opening a raw-text body. Other names go through the
+    // scanner's open-element stack, so their `/>` is the scanner's token.
+    self_closing_element: ($) =>
+      choice(
+        seq(
+          '<',
+          field('name', $._tag_name),
+          repeat($._tag_item),
+          alias($._self_closing_delimiter, '/>'),
+        ),
+        seq(
+          '<',
+          field('name', alias($.script_tag_name, $.tag_name)),
+          $._script_tag_probe,
+          repeat($._tag_item),
+          '/>',
+        ),
+        seq('<', field('name', alias($.style_tag_name, $.tag_name)), repeat($._tag_item), '/>'),
+      ),
 
-    element: ($) => seq($.start_tag, repeat($._content), $.end_tag),
+    // An element ends at its end tag or, for HTML's optional end tags (`li`,
+    // `p`, `td`, `option`, and the rest), where the scanner finds it implied:
+    // at a sibling or other start tag that closes it, at an ancestor's end
+    // tag, or at the end of the file.
+    element: ($) => seq($.start_tag, repeat($._content), choice($.end_tag, $._implicit_end_tag)),
 
-    start_tag: ($) => seq('<', field('name', $.tag_name), repeat($._attribute), '>'),
+    start_tag: ($) => seq('<', field('name', $._tag_name), repeat($._tag_item), '>'),
+
+    // A nugget or server comment can stand in for an attribute, as in
+    // `<option value="1" <%= selected ? "selected" : "" %>>`.
+    _tag_item: ($) => choice($.attribute, $._nugget, $.server_comment),
+
+    // Start and end tag names come from the scanner, which keeps the stack of
+    // open elements that implied end tags are decided from.
+    _tag_name: ($) => alias($._start_tag_name, $.tag_name),
 
     end_tag: ($) =>
       seq(
@@ -279,18 +354,56 @@ export default grammar({
             alias($.script_tag_name, $.tag_name),
             alias($.style_tag_name, $.tag_name),
             alias($.void_tag_name, $.tag_name),
-            $.tag_name,
+            alias($._end_tag_name, $.tag_name),
           ),
         ),
         '>',
       ),
 
-    tag_name: ($) => $._name,
+    // An end tag that names no open element closes nothing, as a browser
+    // treats it, so `<p><table></table></p>` keeps its parent open.
+    stray_end_tag: ($) => seq('</', field('name', alias($._stray_end_tag_name, $.tag_name)), '>'),
 
     doctype: ($) => seq($.doctype_token, optional(alias(/[^>]+/, $.doctype_declaration)), '>'),
 
     doctype_token: (_) => token(prec(RESERVED, /<![Dd][Oo][Cc][Tt][Yy][Pp][Ee]/)),
 
-    text: (_) => /[^<\s][^<]*/,
+    // `<![CDATA[ ... ]]>` and `<?xml ... ?>` appear in XHTML-era pages and
+    // .asmx files. ASP.NET still runs nuggets inside them, as in an RSS feed's
+    // `<![CDATA[<%# Eval("Body") %>]]>`, so nuggets stay real nodes and the
+    // rest is text.
+    cdata_section: ($) =>
+      seq(
+        '<![CDATA[',
+        repeat(
+          choice(
+            $._nugget,
+            $.server_comment,
+            alias(/[^\]<]+/, $.text),
+            alias(']', $.text),
+            alias('<', $.text),
+          ),
+        ),
+        ']]>',
+      ),
+
+    processing_instruction: ($) =>
+      seq(
+        '<?',
+        repeat(
+          choice(
+            $._nugget,
+            $.server_comment,
+            alias(/[^?<]+/, $.text),
+            alias('?', $.text),
+            alias('<', $.text),
+          ),
+        ),
+        '?>',
+      ),
+
+    // A `<` followed by whitespace starts no tag, as browsers and ASP.NET's
+    // own tag pattern read it, so `a < b` is text rather than an element.
+    text: (_) => token(choice(/[^<\s][^<]*/, /<\s[^<]*/)),
   },
 });

@@ -21,7 +21,8 @@ public class Handler {
         (attribute_name)
         (quoted_attribute_value
           (attribute_value))))
-    (handler_code)))
+    (handler_code
+      (c_sharp_code))))
 
 ================================================================================
 web service script element
@@ -46,7 +47,16 @@ public class Service : System.Web.Services.WebService {
         (attribute_name)
         (quoted_attribute_value
           (attribute_value))))
-    (handler_code)))
+    (script_element
+      (start_tag
+        (tag_name)
+        (attribute
+          (attribute_name)
+          (quoted_attribute_value
+            (attribute_value))))
+      (c_sharp_code)
+      (end_tag
+        (tag_name)))))
 
 ================================================================================
 global application file
@@ -71,3 +81,190 @@ global application file
       (language_attribute
         (attribute_name)
         (language_value)))))
+
+================================================================================
+handler directive names ignore case
+================================================================================
+
+<%@ Webhandler Language="VB" Class="Example.Handler" %>
+Public Class Handler
+End Class
+
+---
+
+(source_file
+  (handler_file
+    (handler_directive
+      (directive_name)
+      (language_attribute
+        (attribute_name)
+        (language_value))
+      (attribute
+        (attribute_name)
+        (quoted_attribute_value
+          (attribute_value))))
+    (handler_code
+      (vb_code))))
+
+================================================================================
+server comment and script lines inside handler code
+================================================================================
+
+<%@ WebHandler Language="C#" Class="Example.Handler" %>
+using System.Web;
+  <%-- legacy handler --%>
+public class Handler { string tag = "<script>"; }
+  <script runat="server">
+  static int n;
+  </script>
+
+---
+
+(source_file
+  (handler_file
+    (handler_directive
+      (directive_name)
+      (language_attribute
+        (attribute_name)
+        (language_value))
+      (attribute
+        (attribute_name)
+        (quoted_attribute_value
+          (attribute_value))))
+    (handler_code
+      (c_sharp_code))
+    (server_comment
+      (server_comment_text))
+    (handler_code
+      (c_sharp_code))
+    (script_element
+      (start_tag
+        (tag_name)
+        (attribute
+          (attribute_name)
+          (quoted_attribute_value
+            (attribute_value))))
+      (c_sharp_code)
+      (end_tag
+        (tag_name)))))
+
+================================================================================
+handler directive with no code
+================================================================================
+
+<%@ WebHandler Language="C#" Class="Example.Handler" %>
+
+
+---
+
+(source_file
+  (handler_file
+    (handler_directive
+      (directive_name)
+      (language_attribute
+        (attribute_name)
+        (language_value))
+      (attribute
+        (attribute_name)
+        (quoted_attribute_value
+          (attribute_value))))))
+
+================================================================================
+directive after the handler directive
+================================================================================
+
+<%@ WebHandler Language="C#" Class="Example.Handler" %>
+<%@ Assembly Name="System.Web.Extensions" %>
+public class Handler {}
+
+---
+
+(source_file
+  (handler_file
+    (handler_directive
+      (directive_name)
+      (language_attribute
+        (attribute_name)
+        (language_value))
+      (attribute
+        (attribute_name)
+        (quoted_attribute_value
+          (attribute_value))))
+    (directive
+      (directive_name)
+      (attribute
+        (attribute_name)
+        (quoted_attribute_value
+          (attribute_value))))
+    (handler_code
+      (c_sharp_code))))
+
+================================================================================
+markup inside handler strings stays code
+================================================================================
+
+<%@ WebHandler Language="C#" Class="Example.Handler" %>
+public class Handler {
+  void Write(HttpContext c) {
+    c.Response.Write(@"
+<script src='a.js'>
+<script>alert(1);</script>
+<script />
+<%-- not closed
+");
+  }
+}
+
+---
+
+(source_file
+  (handler_file
+    (handler_directive
+      (directive_name)
+      (language_attribute
+        (attribute_name)
+        (language_value))
+      (attribute
+        (attribute_name)
+        (quoted_attribute_value
+          (attribute_value))))
+    (handler_code
+      (c_sharp_code))))
+
+================================================================================
+a server script's language does not change handler code
+================================================================================
+
+<%@ WebHandler Class="H" %>
+<script runat="server" language="VB">
+Sub A()
+End Sub
+</script>
+public class H : IHttpHandler {}
+
+---
+
+(source_file
+  (handler_file
+    (handler_directive
+      (directive_name)
+      (attribute
+        (attribute_name)
+        (quoted_attribute_value
+          (attribute_value))))
+    (script_element
+      (start_tag
+        (tag_name)
+        (attribute
+          (attribute_name)
+          (quoted_attribute_value
+            (attribute_value)))
+        (attribute
+          (attribute_name)
+          (quoted_attribute_value
+            (attribute_value))))
+      (vb_code)
+      (end_tag
+        (tag_name)))
+    (handler_code
+      (c_sharp_code))))
